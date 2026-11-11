@@ -86,7 +86,9 @@ class BundledAudio extends AudioOut {
       final done = Completer<void>();
       _done = done;
       await _speech.play(AssetSource(path));
-      if (_rate != 1.0) await _speech.setPlaybackRate(_rate);
+      // Always apply: the Android player keeps its previous rate otherwise
+      // (e.g. after switching from Slow back to Normal).
+      await _speech.setPlaybackRate(_rate);
       // Safety timeout so the UI never waits forever on a lost event.
       await done.future.timeout(const Duration(seconds: 60), onTimeout: () {});
       return true;
