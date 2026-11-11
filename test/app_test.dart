@@ -38,7 +38,9 @@ void main() {
   ];
 
   for (final size in const [Size(400, 820), Size(820, 400), Size(1280, 800)]) {
-    testWidgets('home shows all sections and each opens (${size.width.toInt()}x${size.height.toInt()})', (tester) async {
+    testWidgets('home shows all sections and each opens (${size.width.toInt()}x${size.height.toInt()})', (
+      tester,
+    ) async {
       await pumpApp(tester, size: size);
       await tester.pumpAndSettle();
       for (final t in homeTiles) {
@@ -71,9 +73,16 @@ void main() {
 
   testWidgets('choice game: wrong answers are gentle, first-try answers score', (tester) async {
     final rounds = RoundFactory(math.Random(1)).wordToPicture(vocabulary, rounds: 3);
-    final s = await pumpApp(tester,
-        home: ChoiceGameScreen(
-            title: 'T', instruction: 'Match the word to the picture.', makeRounds: () => rounds, kind: 'game_test', ref: 'x'));
+    final s = await pumpApp(
+      tester,
+      home: ChoiceGameScreen(
+        title: 'T',
+        instruction: 'Match the word to the picture.',
+        makeRounds: () => rounds,
+        kind: 'game_test',
+        ref: 'x',
+      ),
+    );
     await tester.pumpAndSettle();
     final state = tester.state<ChoiceGameScreenState>(find.byType(ChoiceGameScreen));
     // Round 1: wrong first, then right -> no score, but the game continues.
@@ -100,7 +109,10 @@ void main() {
   });
 
   testWidgets('match big and small letters', (tester) async {
-    await pumpApp(tester, home: MatchCaseGame(letters: const ['a', 'b', 'c'], rounds: 1, random: math.Random(3)));
+    await pumpApp(
+      tester,
+      home: MatchCaseGame(letters: const ['a', 'b', 'c'], rounds: 1, random: math.Random(3)),
+    );
     await tester.pumpAndSettle();
     final st = tester.state<MatchCaseGameState>(find.byType(MatchCaseGame));
     for (final l in st.left) {
@@ -116,13 +128,18 @@ void main() {
 
   testWidgets('arrange letters into a word', (tester) async {
     final cat = vocabularyById['cat']!;
-    await pumpApp(tester, home: ArrangeLettersGame(words: [cat], rounds: 1, random: math.Random(2)));
+    await pumpApp(
+      tester,
+      home: ArrangeLettersGame(words: [cat], rounds: 1, random: math.Random(2)),
+    );
     await tester.pumpAndSettle();
     final st = tester.state<ArrangeLettersGameState>(find.byType(ArrangeLettersGame));
     expect(st.word.text, 'cat');
     // Tap tiles in the right order.
     final tiles = <int>[];
-    final widgets = tester.widgetList<Text>(find.descendant(of: find.byType(InkWell), matching: find.byType(Text))).toList();
+    final widgets = tester
+        .widgetList<Text>(find.descendant(of: find.byType(InkWell), matching: find.byType(Text)))
+        .toList();
     final letters = widgets.map((t) => t.data).whereType<String>().where((d) => d.length == 1).toList();
     for (final ch in 'cat'.split('')) {
       final i = letters.indexWhere((l) => l == ch);
@@ -140,7 +157,10 @@ void main() {
 
   testWidgets('memory cards: matching pairs stay open', (tester) async {
     final words = ['apple', 'ball'].map((w) => vocabularyById[w]!).toList();
-    await pumpApp(tester, home: MemoryGame(words: words, pairs: 2, random: math.Random(4)));
+    await pumpApp(
+      tester,
+      home: MemoryGame(words: words, pairs: 2, random: math.Random(4)),
+    );
     await tester.pumpAndSettle();
     final st = tester.state<MemoryGameState>(find.byType(MemoryGame));
     final cards = st.cardWords;
@@ -160,13 +180,20 @@ void main() {
   });
 
   testWidgets('drag and drop pictures to their first letter', (tester) async {
-    await pumpApp(tester, home: DragDropGame(rounds: 1, random: math.Random(5)), size: const Size(800, 900));
+    await pumpApp(
+      tester,
+      home: DragDropGame(rounds: 1, random: math.Random(5)),
+      size: const Size(800, 900),
+    );
     await tester.pumpAndSettle();
     final st = tester.state<DragDropGameState>(find.byType(DragDropGame));
     for (final w in List.of(st.items)) {
       final letter = w.text[0];
-      await tester.drag(find.byKey(ValueKey('drag_${w.id}')),
-          tester.getCenter(find.byKey(ValueKey('target_$letter'))) - tester.getCenter(find.byKey(ValueKey('drag_${w.id}'))));
+      await tester.drag(
+        find.byKey(ValueKey('drag_${w.id}')),
+        tester.getCenter(find.byKey(ValueKey('target_$letter'))) -
+            tester.getCenter(find.byKey(ValueKey('drag_${w.id}'))),
+      );
       await wait(tester);
     }
     expect(find.text('Done'), findsOneWidget);
@@ -209,7 +236,11 @@ void main() {
     for (final l in allLessons) {
       await tester.pumpWidget(const SizedBox());
       final s = await tester.runAsync(() => makeServices());
-      await pumpApp(tester, services: s, home: LessonScreen(lesson: l));
+      await pumpApp(
+        tester,
+        services: s,
+        home: LessonScreen(lesson: l),
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: l.id);
     }
@@ -230,8 +261,10 @@ void main() {
   });
 
   testWidgets('listen and repeat works without a microphone', (tester) async {
-    final s = await pumpApp(tester,
-        home: ListenRepeatScreen(title: 'x', items: const [RepeatItem('Hello.'), RepeatItem('Goodbye.')]));
+    final s = await pumpApp(
+      tester,
+      home: ListenRepeatScreen(title: 'x', items: const [RepeatItem('Hello.'), RepeatItem('Goodbye.')]),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('listenModel')));
     await tester.pumpAndSettle();
@@ -242,7 +275,11 @@ void main() {
   });
 
   testWidgets('letter screen: name, sound, recognition grid', (tester) async {
-    final s = await pumpApp(tester, home: LetterScreen(letter: letterInfo('a')), size: const Size(500, 2600));
+    final s = await pumpApp(
+      tester,
+      home: LetterScreen(letter: letterInfo('a')),
+      size: const Size(500, 2600),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('letterSoundBtn')));
     await tester.pumpAndSettle();
@@ -260,7 +297,12 @@ void main() {
   });
 
   testWidgets('tracing pad records strokes and checks them', (tester) async {
-    await pumpApp(tester, home: const Scaffold(body: SizedBox(width: 380, height: 480, child: TracingPad(letter: 'l'))));
+    await pumpApp(
+      tester,
+      home: const Scaffold(
+        body: SizedBox(width: 380, height: 480, child: TracingPad(letter: 'l')),
+      ),
+    );
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
     await tester.pumpAndSettle();
     final surface = find.byKey(const ValueKey('tracingSurface'));
@@ -297,10 +339,15 @@ void main() {
 
   testWidgets('parent dashboard is behind a grown-up question', (tester) async {
     late BuildContext ctx;
-    await pumpApp(tester, home: Builder(builder: (c) {
-      ctx = c;
-      return const Scaffold();
-    }));
+    await pumpApp(
+      tester,
+      home: Builder(
+        builder: (c) {
+          ctx = c;
+          return const Scaffold();
+        },
+      ),
+    );
     final future = showParentGate(ctx, random: math.Random(1));
     await tester.pumpAndSettle();
     final q = tester.widget<Text>(find.byKey(const ValueKey('gateQuestion'))).data!;

@@ -44,7 +44,7 @@ class ChoicePrompt {
 
 class ChoiceRound {
   ChoiceRound({required this.prompt, required this.options, required this.answer, this.wordId, this.sayOnCorrect})
-      : assert(answer >= 0 && answer < options.length);
+    : assert(answer >= 0 && answer < options.length);
 
   final ChoicePrompt prompt;
   final List<ChoiceOption> options;
@@ -185,17 +185,21 @@ class RoundFactory {
 
   /// Hear a colour, choose the paint splat.
   List<ChoiceRound> colours({int rounds = 8}) => listenAndChoose(wordsInTopic(topicColours), rounds: rounds, options: 4)
-      .map((r) => ChoiceRound(
-            prompt: ChoicePrompt(speak: r.prompt.speak, text: r.prompt.text),
-            options: r.options,
-            answer: r.answer,
-            wordId: r.wordId,
-          ))
+      .map(
+        (r) => ChoiceRound(
+          prompt: ChoicePrompt(speak: r.prompt.speak, text: r.prompt.text),
+          options: r.options,
+          answer: r.answer,
+          wordId: r.wordId,
+        ),
+      )
       .toList();
 
   /// Count the pictures, choose the number (1-10, Unit 3).
   List<ChoiceRound> counting({int rounds = 8, int max = 10}) {
-    final pics = withPictures(vocabulary.where((w) => w.topic == topicAlphabet || w.topic == topicToys || w.topic == topicAnimals));
+    final pics = withPictures(
+      vocabulary.where((w) => w.topic == topicAlphabet || w.topic == topicToys || w.topic == topicAnimals),
+    );
     final numbers = wordsInTopic(topicNumbers);
     final out = <ChoiceRound>[];
     final counts = List.generate(max, (i) => i + 1)..shuffle(rnd);
@@ -204,24 +208,37 @@ class RoundFactory {
       final thing = pics[rnd.nextInt(pics.length)];
       final target = numbers[n - 1];
       final opts = _pick(numbers, 3, include: target);
-      out.add(ChoiceRound(
-        prompt: ChoicePrompt(picture: thing, repeat: n, speak: 'How many can you see?'),
-        options: [for (final o in opts) ChoiceOption(word: o, showPicture: false, showText: true)],
-        answer: opts.indexOf(target),
-        wordId: target.id,
-        sayOnCorrect: target.spoken,
-      ));
+      out.add(
+        ChoiceRound(
+          prompt: ChoicePrompt(picture: thing, repeat: n, speak: 'How many can you see?'),
+          options: [for (final o in opts) ChoiceOption(word: o, showPicture: false, showText: true)],
+          answer: opts.indexOf(target),
+          wordId: target.id,
+          sayOnCorrect: target.spoken,
+        ),
+      );
     }
     return out;
   }
 
   /// Animals from the book (Unit 5 + alphabet animals): see, choose word.
   List<ChoiceRound> animals({int rounds = 8}) {
-    const alphabetAnimals = ['ant', 'cat', 'dog', 'duck', 'elephant', 'fish', 'goat', 'horse', 'lion', 'monkey', 'rabbit', 'snake', 'zebra'];
-    final pool = [
-      ...wordsInTopic(topicAnimals),
-      ...alphabetAnimals.map((a) => vocabularyById[wordId(a)]!),
+    const alphabetAnimals = [
+      'ant',
+      'cat',
+      'dog',
+      'duck',
+      'elephant',
+      'fish',
+      'goat',
+      'horse',
+      'lion',
+      'monkey',
+      'rabbit',
+      'snake',
+      'zebra',
     ];
+    final pool = [...wordsInTopic(topicAnimals), ...alphabetAnimals.map((a) => vocabularyById[wordId(a)]!)];
     return pictureToWord(pool, rounds: rounds, options: 3);
   }
 
@@ -261,13 +278,15 @@ class RoundFactory {
       final target = vocabularyById[info.words[rnd.nextInt(info.words.length)]]!;
       final others = withPictures(vocabulary.where((w) => w.topic == topicAlphabet && !w.text.startsWith(letter)));
       final opts = [target, ..._pick(others, 2)]..shuffle(rnd);
-      out.add(ChoiceRound(
-        prompt: ChoicePrompt(letterSound: letter, text: letter),
-        options: [for (final o in opts) ChoiceOption(word: o)],
-        answer: opts.indexOf(target),
-        wordId: target.id,
-        sayOnCorrect: target.spoken,
-      ));
+      out.add(
+        ChoiceRound(
+          prompt: ChoicePrompt(letterSound: letter, text: letter),
+          options: [for (final o in opts) ChoiceOption(word: o)],
+          answer: opts.indexOf(target),
+          wordId: target.id,
+          sayOnCorrect: target.spoken,
+        ),
+      );
     }
     return out;
   }
@@ -328,12 +347,14 @@ class RoundFactory {
       final t = weak[i % weak.length];
       final pool = t.image != null ? pics : wordsInTopic(t.topic);
       final opts = _options(t, pool, 3);
-      out.add(ChoiceRound(
-        prompt: ChoicePrompt(speak: t.spoken, text: t.text, hideTextUntilAnswered: i.isEven),
-        options: [for (final o in opts) ChoiceOption(word: o)],
-        answer: opts.indexOf(t),
-        wordId: t.id,
-      ));
+      out.add(
+        ChoiceRound(
+          prompt: ChoicePrompt(speak: t.spoken, text: t.text, hideTextUntilAnswered: i.isEven),
+          options: [for (final o in opts) ChoiceOption(word: o)],
+          answer: opts.indexOf(t),
+          wordId: t.id,
+        ),
+      );
     }
     return out;
   }

@@ -24,11 +24,7 @@ void main() {
   texts.removeWhere((t) => t.trim().isEmpty);
 
   final letters = [
-    for (final l in alphabet)
-      {'letter': l.lower, 'name': l.nameIpa, 'sound': l.soundIpa},
+    for (final l in alphabet) {'letter': l.lower, 'name': l.nameIpa, 'sound': l.soundIpa},
   ];
-  print(const JsonEncoder.withIndent(' ').convert({
-    'texts': texts.toList()..sort(),
-    'letters': letters,
-  }));
+  print(const JsonEncoder.withIndent(' ').convert({'texts': texts.toList()..sort(), 'letters': letters}));
 }

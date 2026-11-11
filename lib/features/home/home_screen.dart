@@ -37,22 +37,33 @@ Lesson nextLesson(ProgressStore progress) {
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  void _push(BuildContext context, Widget page) =>
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  void _push(BuildContext context, Widget page) => Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
 
   @override
   Widget build(BuildContext context) {
     final services = AppScope.of(context);
     final progress = services.progress;
     final tiles = <_TileSpec>[
-      _TileSpec('startLearning', 'startLearningSub', Icons.play_circle_fill_rounded,
-          () => _push(context, LessonScreen(lesson: nextLesson(progress)))),
-      _TileSpec('textbook', 'textbookSub', Icons.menu_book_rounded,
-          () => _push(context, ReaderScreen(initialPage: progress.lastReaderPage))),
+      _TileSpec(
+        'startLearning',
+        'startLearningSub',
+        Icons.play_circle_fill_rounded,
+        () => _push(context, LessonScreen(lesson: nextLesson(progress))),
+      ),
+      _TileSpec(
+        'textbook',
+        'textbookSub',
+        Icons.menu_book_rounded,
+        () => _push(context, ReaderScreen(initialPage: progress.lastReaderPage)),
+      ),
       _TileSpec('lessons', 'lessonsSub', Icons.school_rounded, () => _push(context, const UnitsScreen())),
       _TileSpec('alphabet', 'alphabetSub', Icons.abc_rounded, () => _push(context, const AlphabetScreen())),
-      _TileSpec('vocabulary', 'vocabularySub', Icons.collections_bookmark_rounded,
-          () => _push(context, const VocabularyScreen())),
+      _TileSpec(
+        'vocabulary',
+        'vocabularySub',
+        Icons.collections_bookmark_rounded,
+        () => _push(context, const VocabularyScreen()),
+      ),
       _TileSpec('listening', 'listeningSub', Icons.headphones_rounded, () => _push(context, const ListeningScreen())),
       _TileSpec('games', 'gamesSub', Icons.sports_esports_rounded, () => _push(context, const GamesScreen())),
       _TileSpec('quizzes', 'quizzesSub', Icons.emoji_events_rounded, () => _push(context, const QuizzesScreen())),
@@ -64,23 +75,23 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(builder: (context, c) {
-          final wide = c.maxWidth > 700;
-          final cols = c.maxWidth > 700 ? 4 : (c.maxWidth > 460 ? 3 : 2);
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: _Header(wide: wide)),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cols,
-                    mainAxisSpacing: 14,
-                    crossAxisSpacing: 14,
-                    childAspectRatio: c.maxWidth > 1000 ? 1.5 : (wide ? 1.15 : 1.0),
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) {
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final wide = c.maxWidth > 700;
+            final cols = c.maxWidth > 700 ? 4 : (c.maxWidth > 460 ? 3 : 2);
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _Header(wide: wide)),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: cols,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 14,
+                      childAspectRatio: c.maxWidth > 1000 ? 1.5 : (wide ? 1.15 : 1.0),
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, i) {
                       final t = tiles[i];
                       return BigTile(
                         key: ValueKey('home_${t.key}'),
@@ -90,14 +101,13 @@ class HomeScreen extends StatelessWidget {
                         colour: tileColours[i],
                         onTap: t.onTap,
                       );
-                    },
-                    childCount: tiles.length,
+                    }, childCount: tiles.length),
                   ),
                 ),
-              ),
-            ],
-          );
-        }),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -138,24 +148,36 @@ class _Header extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(context.tr('hello'),
-                        style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800)),
-                    Text(context.tr('letsLearn'),
-                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+                    Text(
+                      context.tr('hello'),
+                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      context.tr('letsLearn'),
+                      style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
-                    Text('${context.tr('appTitle')} · ${context.tr('appSubtitle')}',
-                        maxLines: 2,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
+                    Text(
+                      '${context.tr('appTitle')} · ${context.tr('appSubtitle')}',
+                      maxLines: 2,
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12),
+                    ),
                     const SizedBox(height: 8),
-                    Wrap(spacing: 8, runSpacing: 6, children: [
-                      _HeaderChip(icon: Icons.star_rounded, text: '${progress.totalStars}'),
-                      _HeaderChip(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        _HeaderChip(icon: Icons.star_rounded, text: '${progress.totalStars}'),
+                        _HeaderChip(
                           icon: Icons.military_tech_rounded,
-                          text: '${context.tr('level')} ${progress.level}'),
-                      _HeaderChip(
+                          text: '${context.tr('level')} ${progress.level}',
+                        ),
+                        _HeaderChip(
                           icon: Icons.flag_rounded,
-                          text: '${today.clamp(0, goal)}/$goal ${context.tr('activitiesToday')}'),
-                    ]),
+                          text: '${today.clamp(0, goal)}/$goal ${context.tr('activitiesToday')}',
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -174,12 +196,18 @@ class _HeaderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(20)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: AppColors.sunshine, size: 18),
-          const SizedBox(width: 4),
-          Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-        ]),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(20)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: AppColors.sunshine, size: 18),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+      ],
+    ),
+  );
 }

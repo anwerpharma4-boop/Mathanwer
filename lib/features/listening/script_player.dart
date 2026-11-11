@@ -23,20 +23,20 @@ const Map<String, Color> _speakerColours = {
 Color speakerColour(String s) => _speakerColours[s] ?? const Color(0xFF6C7A93);
 
 String scriptKindLabel(ScriptKind k) => switch (k) {
-      ScriptKind.conversation => 'Conversation',
-      ScriptKind.song => 'Song',
-      ScriptKind.chant => 'Chant',
-      ScriptKind.story => 'Story',
-      ScriptKind.phrases => 'Listen and say',
-    };
+  ScriptKind.conversation => 'Conversation',
+  ScriptKind.song => 'Song',
+  ScriptKind.chant => 'Chant',
+  ScriptKind.story => 'Story',
+  ScriptKind.phrases => 'Listen and say',
+};
 
 IconData scriptKindIcon(ScriptKind k) => switch (k) {
-      ScriptKind.conversation => Icons.forum_rounded,
-      ScriptKind.song => Icons.music_note_rounded,
-      ScriptKind.chant => Icons.music_note_rounded,
-      ScriptKind.story => Icons.auto_stories_rounded,
-      ScriptKind.phrases => Icons.record_voice_over_rounded,
-    };
+  ScriptKind.conversation => Icons.forum_rounded,
+  ScriptKind.song => Icons.music_note_rounded,
+  ScriptKind.chant => Icons.music_note_rounded,
+  ScriptKind.story => Icons.auto_stories_rounded,
+  ScriptKind.phrases => Icons.record_voice_over_rounded,
+};
 
 /// Plays a dialogue / song / story from the textbook transcripts line by
 /// line in British English, with "listen and say" pauses for repetition.
@@ -118,83 +118,100 @@ class _ScriptPlayerScreenState extends State<ScriptPlayerScreen> {
     return AppPage(
       title: s.title,
       colour: widget.colour,
-      body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(spacing: 8, runSpacing: 6, alignment: WrapAlignment.center, children: [
-            Pill(text: scriptKindLabel(s.kind), icon: scriptKindIcon(s.kind), colour: widget.colour),
-            if (s.track != null) Pill(text: 'Book track ${s.track}', icon: Icons.headphones_rounded, colour: AppColors.grass),
-            if (widget.bookPage != null)
-              Pill(text: '${context.tr('page')} ${widget.bookPage}', icon: Icons.menu_book_rounded, colour: AppColors.primary),
-          ]),
-        ),
-        if (s.instruction != null)
+      body: Column(
+        children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              alignment: WrapAlignment.center,
+              children: [
+                Pill(text: scriptKindLabel(s.kind), icon: scriptKindIcon(s.kind), colour: widget.colour),
+                if (s.track != null)
+                  Pill(text: 'Book track ${s.track}', icon: Icons.headphones_rounded, colour: AppColors.grass),
+                if (widget.bookPage != null)
+                  Pill(
+                    text: '${context.tr('page')} ${widget.bookPage}',
+                    icon: Icons.menu_book_rounded,
+                    colour: AppColors.primary,
+                  ),
+              ],
+            ),
+          ),
+          if (s.instruction != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: EnglishContent(
+                child: Text(
+                  s.instruction!,
+                  textAlign: TextAlign.center,
+                  style: learningText(17, color: AppColors.inkSoft),
+                ),
+              ),
+            ),
+          if (isSong)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: Text(
+                'Words of the song from the book, read aloud in British English. The original song recording is not included.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
+              ),
+            ),
+          Expanded(
             child: EnglishContent(
-                child: Text(s.instruction!, textAlign: TextAlign.center, style: learningText(17, color: AppColors.inkSoft))),
-          ),
-        if (isSong)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
-            child: Text(
-              'Words of the song from the book, read aloud in British English. The original song recording is not included.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
-            ),
-          ),
-        Expanded(
-          child: EnglishContent(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: s.lines.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, i) => _LineBubble(
-                key: ValueKey('line_$i'),
-                line: s.lines[i],
-                active: _current == i,
-                story: s.kind == ScriptKind.story,
-                onTap: () {
-                  _run++;
-                  _playLine(i);
-                },
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: s.lines.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (context, i) => _LineBubble(
+                  key: ValueKey('line_$i'),
+                  line: s.lines[i],
+                  active: _current == i,
+                  story: s.kind == ScriptKind.story,
+                  onTap: () {
+                    _run++;
+                    _playLine(i);
+                  },
+                ),
               ),
             ),
           ),
-        ),
-        Material(
-          color: Colors.white,
-          elevation: 3,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 10,
-                runSpacing: 8,
-                children: [
-                  FilledButton.icon(
-                    key: const ValueKey('playAll'),
-                    onPressed: _playingAll ? _stop : _playAll,
-                    icon: Icon(_playingAll ? Icons.stop_rounded : Icons.play_arrow_rounded),
-                    label: Text(_playingAll ? context.tr('stop') : context.tr('playAll')),
-                  ),
-                  FilterChip(
-                    key: const ValueKey('repeatMode'),
-                    selected: _repeatMode,
-                    onSelected: (v) => setState(() => _repeatMode = v),
-                    avatar: const Icon(Icons.record_voice_over_rounded, size: 18),
-                    label: Text(context.tr('listenAndSay')),
-                  ),
-                  const SpeedControl(),
-                ],
+          Material(
+            color: Colors.white,
+            elevation: 3,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.icon(
+                      key: const ValueKey('playAll'),
+                      onPressed: _playingAll ? _stop : _playAll,
+                      icon: Icon(_playingAll ? Icons.stop_rounded : Icons.play_arrow_rounded),
+                      label: Text(_playingAll ? context.tr('stop') : context.tr('playAll')),
+                    ),
+                    FilterChip(
+                      key: const ValueKey('repeatMode'),
+                      selected: _repeatMode,
+                      onSelected: (v) => setState(() => _repeatMode = v),
+                      avatar: const Icon(Icons.record_voice_over_rounded, size: 18),
+                      label: Text(context.tr('listenAndSay')),
+                    ),
+                    const SpeedControl(),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -222,19 +239,28 @@ class _LineBubble extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (line.speaker.isNotEmpty)
-              Container(
-                margin: const EdgeInsets.only(right: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: colour, borderRadius: BorderRadius.circular(14)),
-                child: Text(line.speaker, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (line.speaker.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(color: colour, borderRadius: BorderRadius.circular(14)),
+                  child: Text(
+                    line.speaker,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              Expanded(
+                child: Text(
+                  line.text,
+                  style: learningText(story ? 19 : 24, weight: story ? FontWeight.w500 : FontWeight.w700),
+                ),
               ),
-            Expanded(
-              child: Text(line.text, style: learningText(story ? 19 : 24, weight: story ? FontWeight.w500 : FontWeight.w700)),
-            ),
-            Icon(active ? Icons.graphic_eq_rounded : Icons.volume_up_rounded, color: colour),
-          ]),
+              Icon(active ? Icons.graphic_eq_rounded : Icons.volume_up_rounded, color: colour),
+            ],
+          ),
         ),
       ),
     );
@@ -247,14 +273,16 @@ class MascotSays extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        const Mascot(size: 64),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Panel(
-            padding: const EdgeInsets.all(12),
-            child: Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          ),
+  Widget build(BuildContext context) => Row(
+    children: [
+      const Mascot(size: 64),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Panel(
+          padding: const EdgeInsets.all(12),
+          child: Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         ),
-      ]);
+      ),
+    ],
+  );
 }

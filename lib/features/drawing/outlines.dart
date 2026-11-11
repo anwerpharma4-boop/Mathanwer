@@ -150,11 +150,12 @@ void paintOutline(Canvas canvas, Size size, Path unitPath) {
   final m = Matrix4.diagonal3Values(size.width, size.height, 1);
   final path = unitPath.transform(m.storage);
   canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(3, size.shortestSide * 0.012)
-        ..strokeJoin = StrokeJoin.round
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF26324A));
+    path,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(3, size.shortestSide * 0.012)
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFF26324A),
+  );
 }

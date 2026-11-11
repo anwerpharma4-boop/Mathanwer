@@ -136,9 +136,15 @@ class ProgressStore extends ChangeNotifier {
         version: _schemaVersion,
         onCreate: (db, v) async {
           final b = db.batch();
-          b.execute('CREATE TABLE lessons(lesson_id TEXT PRIMARY KEY, status INTEGER NOT NULL, stars INTEGER NOT NULL, updated_at INTEGER NOT NULL)');
-          b.execute('CREATE TABLE results(id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, ref TEXT NOT NULL, unit_id INTEGER, score INTEGER NOT NULL, total INTEGER NOT NULL, stars INTEGER NOT NULL, created_at INTEGER NOT NULL)');
-          b.execute('CREATE TABLE words(word_id TEXT PRIMARY KEY, correct INTEGER NOT NULL, wrong INTEGER NOT NULL, last_seen INTEGER NOT NULL)');
+          b.execute(
+            'CREATE TABLE lessons(lesson_id TEXT PRIMARY KEY, status INTEGER NOT NULL, stars INTEGER NOT NULL, updated_at INTEGER NOT NULL)',
+          );
+          b.execute(
+            'CREATE TABLE results(id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, ref TEXT NOT NULL, unit_id INTEGER, score INTEGER NOT NULL, total INTEGER NOT NULL, stars INTEGER NOT NULL, created_at INTEGER NOT NULL)',
+          );
+          b.execute(
+            'CREATE TABLE words(word_id TEXT PRIMARY KEY, correct INTEGER NOT NULL, wrong INTEGER NOT NULL, last_seen INTEGER NOT NULL)',
+          );
           b.execute('CREATE TABLE daily(day TEXT PRIMARY KEY, seconds INTEGER NOT NULL, activities INTEGER NOT NULL)');
           b.execute('CREATE TABLE bookmarks(page INTEGER PRIMARY KEY, created_at INTEGER NOT NULL)');
           b.execute('CREATE TABLE badges(id TEXT PRIMARY KEY, earned_at INTEGER NOT NULL)');
@@ -156,19 +162,20 @@ class ProgressStore extends ChangeNotifier {
     final db = _db;
     if (db == null) return;
     for (final r in await db.query('lessons')) {
-      _lessons[r['lesson_id'] as String] = LessonProgress(
-          LessonStatus.values[r['status'] as int], r['stars'] as int);
+      _lessons[r['lesson_id'] as String] = LessonProgress(LessonStatus.values[r['status'] as int], r['stars'] as int);
     }
     for (final r in await db.query('results', orderBy: 'id')) {
-      _results.add(ActivityResult(
-        kind: r['kind'] as String,
-        ref: r['ref'] as String,
-        unitId: r['unit_id'] as int?,
-        score: r['score'] as int,
-        total: r['total'] as int,
-        stars: r['stars'] as int,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int),
-      ));
+      _results.add(
+        ActivityResult(
+          kind: r['kind'] as String,
+          ref: r['ref'] as String,
+          unitId: r['unit_id'] as int?,
+          score: r['score'] as int,
+          total: r['total'] as int,
+          stars: r['stars'] as int,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int),
+        ),
+      );
     }
     for (final r in await db.query('words')) {
       _words[r['word_id'] as String] = WordStat(r['correct'] as int, r['wrong'] as int);
@@ -193,14 +200,17 @@ class ProgressStore extends ChangeNotifier {
   int get _now => DateTime.now().millisecondsSinceEpoch;
 
   // ------------------------------------------------------------- lessons
-  LessonProgress lesson(String id) =>
-      _lessons[id] ?? const LessonProgress(LessonStatus.notStarted, 0);
+  LessonProgress lesson(String id) => _lessons[id] ?? const LessonProgress(LessonStatus.notStarted, 0);
 
   Future<void> markLessonStarted(String id) async {
     if (lesson(id).status != LessonStatus.notStarted) return;
     _lessons[id] = const LessonProgress(LessonStatus.inProgress, 0);
-    await _db?.insert('lessons', {'lesson_id': id, 'status': 1, 'stars': 0, 'updated_at': _now},
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db?.insert('lessons', {
+      'lesson_id': id,
+      'status': 1,
+      'stars': 0,
+      'updated_at': _now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     await setValue('last_lesson', id);
     notifyListeners();
   }
@@ -209,20 +219,22 @@ class ProgressStore extends ChangeNotifier {
     final prev = lesson(id);
     final best = stars > prev.stars ? stars : prev.stars;
     _lessons[id] = LessonProgress(LessonStatus.completed, best);
-    await _db?.insert('lessons', {'lesson_id': id, 'status': 2, 'stars': best, 'updated_at': _now},
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db?.insert('lessons', {
+      'lesson_id': id,
+      'status': 2,
+      'stars': best,
+      'updated_at': _now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     await setValue('last_lesson', id);
     await _bumpActivity();
     await _checkBadges();
     notifyListeners();
   }
 
-  int get completedLessonCount =>
-      _lessons.values.where((l) => l.status == LessonStatus.completed).length;
+  int get completedLessonCount => _lessons.values.where((l) => l.status == LessonStatus.completed).length;
 
-  bool isUnitComplete(int unitId) => unitById(unitId)
-      .lessons
-      .every((l) => lesson(l.id).status == LessonStatus.completed);
+  bool isUnitComplete(int unitId) =>
+      unitById(unitId).lessons.every((l) => lesson(l.id).status == LessonStatus.completed);
 
   double unitCompletion(int unitId) {
     final ls = unitById(unitId).lessons;
@@ -267,8 +279,7 @@ class ProgressStore extends ChangeNotifier {
   }
 
   int get totalStars =>
-      _results.fold<int>(0, (s, r) => s + r.stars) +
-      _lessons.values.fold<int>(0, (s, l) => s + l.stars);
+      _results.fold<int>(0, (s, r) => s + r.stars) + _lessons.values.fold<int>(0, (s, l) => s + l.stars);
 
   int get level => levelForStars(totalStars);
 
@@ -281,9 +292,8 @@ class ProgressStore extends ChangeNotifier {
     return ((totalStars - lo) / (hi - lo)).clamp(0, 1).toDouble();
   }
 
-  int bestStars(String kind, String ref) => _results
-      .where((r) => r.kind == kind && r.ref == ref)
-      .fold<int>(0, (m, r) => r.stars > m ? r.stars : m);
+  int bestStars(String kind, String ref) =>
+      _results.where((r) => r.kind == kind && r.ref == ref).fold<int>(0, (m, r) => r.stars > m ? r.stars : m);
 
   // ------------------------------------------------------------- words
   WordStat wordStat(String id) => _words[id] ?? WordStat(0, 0);
@@ -295,17 +305,19 @@ class ProgressStore extends ChangeNotifier {
     } else {
       s.wrong++;
     }
-    await _db?.insert('words', {'word_id': id, 'correct': s.correct, 'wrong': s.wrong, 'last_seen': _now},
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db?.insert('words', {
+      'word_id': id,
+      'correct': s.correct,
+      'wrong': s.wrong,
+      'last_seen': _now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   int get masteredWordCount => _words.values.where((w) => w.mastered).length;
 
   /// Words that need revision: answered wrongly and not yet mastered.
   List<String> get weakWords {
-    final list = _words.entries
-        .where((e) => e.value.wrong > 0 && !e.value.mastered && e.value.accuracy < 0.75)
-        .toList()
+    final list = _words.entries.where((e) => e.value.wrong > 0 && !e.value.mastered && e.value.accuracy < 0.75).toList()
       ..sort((a, b) => b.value.wrong.compareTo(a.value.wrong));
     return list.map((e) => e.key).toList();
   }
@@ -329,10 +341,11 @@ class ProgressStore extends ChangeNotifier {
     await _saveDay(k);
   }
 
-  Future<void> _saveDay(String k) async => _db?.insert(
-      'daily',
-      {'day': k, 'seconds': _dailySeconds[k] ?? 0, 'activities': _dailyActivities[k] ?? 0},
-      conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<void> _saveDay(String k) async => _db?.insert('daily', {
+    'day': k,
+    'seconds': _dailySeconds[k] ?? 0,
+    'activities': _dailyActivities[k] ?? 0,
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
 
   int dailyGoal = 5;
 
@@ -347,8 +360,7 @@ class ProgressStore extends ChangeNotifier {
       await _db?.delete('bookmarks', where: 'page = ?', whereArgs: [page]);
     } else {
       _bookmarks.add(page);
-      await _db?.insert('bookmarks', {'page': page, 'created_at': _now},
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await _db?.insert('bookmarks', {'page': page, 'created_at': _now}, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     notifyListeners();
   }
@@ -372,8 +384,10 @@ class ProgressStore extends ChangeNotifier {
     final now = DateTime.now();
     _badges[id] = now;
     newlyEarned.add(badgeDefs.firstWhere((b) => b.id == id));
-    await _db?.insert('badges', {'id': id, 'earned_at': now.millisecondsSinceEpoch},
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db?.insert('badges', {
+      'id': id,
+      'earned_at': now.millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> _checkBadges() async {
@@ -425,11 +439,13 @@ class ProgressStore extends ChangeNotifier {
       c[w.topic] = (c[w.topic] ?? 0) + e.value.correct;
       t[w.topic] = (t[w.topic] ?? 0) + e.value.attempts;
     }
-    return {for (final k in t.keys) if (t[k]! > 0) k: c[k]! / t[k]!};
+    return {
+      for (final k in t.keys)
+        if (t[k]! > 0) k: c[k]! / t[k]!,
+    };
   }
 
-  double get overallCompletion =>
-      allLessons.isEmpty ? 0 : completedLessonCount / allLessons.length;
+  double get overallCompletion => allLessons.isEmpty ? 0 : completedLessonCount / allLessons.length;
 
   Future<void> resetAll() async {
     for (final t in ['lessons', 'results', 'words', 'daily', 'bookmarks', 'badges', 'kv']) {

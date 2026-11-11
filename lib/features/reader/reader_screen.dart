@@ -37,8 +37,7 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
   bool _fullscreen = false;
   bool _chromeVisible = true;
   final TransformationController _tc = TransformationController();
-  late final AnimationController _anim =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
+  late final AnimationController _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
   Animation<Matrix4>? _matrixAnim;
   Size _viewport = Size.zero;
   double _settledScale = 1;
@@ -104,16 +103,17 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
     return Rect.fromLTWH((_viewport.width - s.width) / 2, _gap + (p - 1) * (s.height + _gap), s.width, s.height);
   }
 
-  Size get _contentSize => _continuous
-      ? Size(_viewport.width, _gap + pageCount * (_pageSize.height + _gap))
-      : _viewport;
+  Size get _contentSize =>
+      _continuous ? Size(_viewport.width, _gap + pageCount * (_pageSize.height + _gap)) : _viewport;
 
   Rect get _currentPageRect => _continuous ? pageRectContinuous(_page) : _singlePageRect;
 
   // ------------------------------------------------------------------ zoom
   void _animateTo(Matrix4 target) {
-    _matrixAnim = Matrix4Tween(begin: _tc.value.clone(), end: target)
-        .animate(CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic));
+    _matrixAnim = Matrix4Tween(
+      begin: _tc.value.clone(),
+      end: target,
+    ).animate(CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic));
     _anim.forward(from: 0);
   }
 
@@ -124,9 +124,9 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
 
   void fitWidth() => _animateTo(ZoomMath.fitWidth(_viewport, _contentSize, _currentPageRect));
 
-  void fitPage() => _animateTo(_continuous
-      ? ZoomMath.showPage(_viewport, _contentSize, pageRectContinuous(_page))
-      : Matrix4.identity());
+  void fitPage() => _animateTo(
+    _continuous ? ZoomMath.showPage(_viewport, _contentSize, pageRectContinuous(_page)) : Matrix4.identity(),
+  );
 
   void resetZoom() => fitPage();
 
@@ -157,8 +157,11 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
     if (_continuous && _viewport != Size.zero) {
       final s = math.max(1.0, scale);
       final r = pageRectContinuous(target);
-      final m = ZoomMath.clamp(ZoomMath.make(s, Offset(ZoomMath.translationOf(_tc.value).dx, -r.top * s + _gap)),
-          _viewport, _contentSize);
+      final m = ZoomMath.clamp(
+        ZoomMath.make(s, Offset(ZoomMath.translationOf(_tc.value).dx, -r.top * s + _gap)),
+        _viewport,
+        _contentSize,
+      );
       if (animate) {
         _animateTo(m);
       } else {
@@ -220,51 +223,66 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
             Expanded(
               child: _bookError
                   ? Center(child: Text(context.tr('bookError'), style: const TextStyle(fontSize: 18)))
-                  : LayoutBuilder(builder: (context, c) {
-                      final size = Size(c.maxWidth, c.maxHeight);
-                      if (size != _viewport) {
-                        final first = _viewport == Size.zero;
-                        _viewport = size;
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (!mounted) return;
-                          if (first || _continuous) {
-                            goTo(_page);
-                          } else {
-                            _tc.value = ZoomMath.clamp(_tc.value, _viewport, _contentSize);
-                          }
-                        });
-                      }
-                      return Stack(children: [
-                        Positioned.fill(child: _continuous ? _continuousView(context) : _singleView(context)),
-                        if (scale > 1.01)
-                          Positioned(
-                            left: 12,
-                            top: 12,
-                            child: IgnorePointer(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(14)),
-                                child: Text('${scale.toStringAsFixed(1)}×',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  : LayoutBuilder(
+                      builder: (context, c) {
+                        final size = Size(c.maxWidth, c.maxHeight);
+                        if (size != _viewport) {
+                          final first = _viewport == Size.zero;
+                          _viewport = size;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            if (first || _continuous) {
+                              goTo(_page);
+                            } else {
+                              _tc.value = ZoomMath.clamp(_tc.value, _viewport, _contentSize);
+                            }
+                          });
+                        }
+                        return Stack(
+                          children: [
+                            Positioned.fill(child: _continuous ? _continuousView(context) : _singleView(context)),
+                            // Zoom badge listens to the controller directly so pinching
+                            // does not rebuild the whole screen every frame.
+                            Positioned(
+                              left: 12,
+                              top: 12,
+                              child: IgnorePointer(
+                                child: ListenableBuilder(
+                                  listenable: _tc,
+                                  builder: (context, _) => scale <= 1.01
+                                      ? const SizedBox.shrink()
+                                      : Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black54,
+                                            borderRadius: BorderRadius.circular(14),
+                                          ),
+                                          child: Text(
+                                            '${scale.toStringAsFixed(1)}×',
+                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                                          ),
+                                        ),
+                                ),
                               ),
                             ),
-                          ),
-                        if (_fullscreen)
-                          Positioned(
-                            right: 12,
-                            top: 12,
-                            child: Material(
-                              color: Colors.black45,
-                              shape: const CircleBorder(),
-                              child: IconButton(
-                                key: const ValueKey('exitFullscreen'),
-                                icon: const Icon(Icons.fullscreen_exit_rounded, color: Colors.white),
-                                onPressed: _toggleFullscreen,
+                            if (_fullscreen)
+                              Positioned(
+                                right: 12,
+                                top: 12,
+                                child: Material(
+                                  color: Colors.black45,
+                                  shape: const CircleBorder(),
+                                  child: IconButton(
+                                    key: const ValueKey('exitFullscreen'),
+                                    icon: const Icon(Icons.fullscreen_exit_rounded, color: Colors.white),
+                                    onPressed: _toggleFullscreen,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                      ]);
-                    }),
+                          ],
+                        );
+                      },
+                    ),
             ),
             if (showChrome) _bottomBar(context),
           ],
@@ -283,51 +301,63 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
           elevation: 1,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(children: [
-              IconButton(
-                tooltip: context.tr('back'),
-                icon: const BackButtonIcon(),
-                onPressed: () => Navigator.of(context).maybePop(),
-              ),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                  Text('${context.tr('page')} $_page / $pageCount',
-                      key: const ValueKey('pageLabel'),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                  EnglishContent(
-                    child: Text(describePage(_page),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: context.tr('back'),
+                  icon: const BackButtonIcon(),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${context.tr('page')} $_page / $pageCount',
+                        key: const ValueKey('pageLabel'),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                      EnglishContent(
+                        child: Text(
+                          describePage(_page),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+                        ),
+                      ),
+                    ],
                   ),
-                ]),
-              ),
-              IconButton(
-                key: const ValueKey('bookmarkButton'),
-                tooltip: context.tr('bookmarks'),
-                icon: Icon(marked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                    color: marked ? AppColors.coral : null),
-                onPressed: () => services.progress.toggleBookmark(_page),
-              ),
-              IconButton(
-                key: const ValueKey('navigatorButton'),
-                tooltip: '${context.tr('thumbnails')} / ${context.tr('search')}',
-                icon: const Icon(Icons.grid_view_rounded),
-                onPressed: _openNavigator,
-              ),
-              IconButton(
-                key: const ValueKey('modeButton'),
-                tooltip: _continuous ? context.tr('singlePage') : context.tr('continuous'),
-                icon: Icon(_continuous ? Icons.crop_portrait_rounded : Icons.view_day_rounded),
-                onPressed: () => setContinuous(!_continuous),
-              ),
-              IconButton(
-                key: const ValueKey('fullscreenButton'),
-                tooltip: context.tr('fullscreen'),
-                icon: const Icon(Icons.fullscreen_rounded),
-                onPressed: _toggleFullscreen,
-              ),
-            ]),
+                ),
+                IconButton(
+                  key: const ValueKey('bookmarkButton'),
+                  tooltip: context.tr('bookmarks'),
+                  icon: Icon(
+                    marked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                    color: marked ? AppColors.coral : null,
+                  ),
+                  onPressed: () => services.progress.toggleBookmark(_page),
+                ),
+                IconButton(
+                  key: const ValueKey('navigatorButton'),
+                  tooltip: '${context.tr('thumbnails')} / ${context.tr('search')}',
+                  icon: const Icon(Icons.grid_view_rounded),
+                  onPressed: _openNavigator,
+                ),
+                IconButton(
+                  key: const ValueKey('modeButton'),
+                  tooltip: _continuous ? context.tr('singlePage') : context.tr('continuous'),
+                  icon: Icon(_continuous ? Icons.crop_portrait_rounded : Icons.view_day_rounded),
+                  onPressed: () => setContinuous(!_continuous),
+                ),
+                IconButton(
+                  key: const ValueKey('fullscreenButton'),
+                  tooltip: context.tr('fullscreen'),
+                  icon: const Icon(Icons.fullscreen_rounded),
+                  onPressed: _toggleFullscreen,
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -340,65 +370,77 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
       elevation: 1,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(4, 2, 4, 4),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Row(children: [
-            IconButton(
-              key: const ValueKey('prevPage'),
-              tooltip: context.tr('previousPage'),
-              icon: const Icon(Icons.chevron_left_rounded, size: 34),
-              onPressed: _page > 1 ? previous : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  key: const ValueKey('prevPage'),
+                  tooltip: context.tr('previousPage'),
+                  icon: const Icon(Icons.chevron_left_rounded, size: 34),
+                  onPressed: _page > 1 ? previous : null,
+                ),
+                Expanded(
+                  child: Slider(
+                    value: _page.toDouble(),
+                    min: 1,
+                    max: pageCount.toDouble(),
+                    divisions: pageCount - 1,
+                    label: '$_page',
+                    onChanged: (v) => goTo(v.round()),
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('nextPage'),
+                  tooltip: context.tr('nextPage'),
+                  icon: const Icon(Icons.chevron_right_rounded, size: 34),
+                  onPressed: _page < pageCount ? next : null,
+                ),
+              ],
             ),
-            Expanded(
-              child: Slider(
-                value: _page.toDouble(),
-                min: 1,
-                max: pageCount.toDouble(),
-                divisions: pageCount - 1,
-                label: '$_page',
-                onChanged: (v) => goTo(v.round()),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _zoomButton(Icons.zoom_out_rounded, '−', () => zoomBy(1 / 1.5), const ValueKey('zoomOut')),
+                  _zoomButton(Icons.zoom_in_rounded, '+', () => zoomBy(1.5), const ValueKey('zoomIn')),
+                  _zoomButton(Icons.width_full_rounded, context.tr('fitWidth'), fitWidth, const ValueKey('fitWidth')),
+                  _zoomButton(Icons.fit_screen_rounded, context.tr('fitPage'), fitPage, const ValueKey('fitPage')),
+                  _zoomButton(
+                    Icons.restart_alt_rounded,
+                    context.tr('resetZoom'),
+                    resetZoom,
+                    const ValueKey('resetZoom'),
+                  ),
+                ],
               ),
             ),
-            IconButton(
-              key: const ValueKey('nextPage'),
-              tooltip: context.tr('nextPage'),
-              icon: const Icon(Icons.chevron_right_rounded, size: 34),
-              onPressed: _page < pageCount ? next : null,
-            ),
-          ]),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(children: [
-              _zoomButton(Icons.zoom_out_rounded, '−', () => zoomBy(1 / 1.5), const ValueKey('zoomOut')),
-              _zoomButton(Icons.zoom_in_rounded, '+', () => zoomBy(1.5), const ValueKey('zoomIn')),
-              _zoomButton(Icons.width_full_rounded, context.tr('fitWidth'), fitWidth, const ValueKey('fitWidth')),
-              _zoomButton(Icons.fit_screen_rounded, context.tr('fitPage'), fitPage, const ValueKey('fitPage')),
-              _zoomButton(Icons.restart_alt_rounded, context.tr('resetZoom'), resetZoom, const ValueKey('resetZoom')),
-            ]),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
 
   Widget _zoomButton(IconData icon, String label, VoidCallback onTap, Key key) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 3),
-        child: TextButton.icon(
-          key: key,
-          onPressed: onTap,
-          icon: Icon(icon),
-          label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 3),
+    child: TextButton.icon(
+      key: key,
+      onPressed: onTap,
+      icon: Icon(icon),
+      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+    ),
+  );
 
   double get _dpr => MediaQuery.devicePixelRatioOf(context);
 
   Widget _gestures({required Widget child}) => GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: _fullscreen ? () => setState(() => _chromeVisible = !_chromeVisible) : null,
-        onDoubleTapDown: (d) => _doubleTapPos = d.localPosition,
-        onDoubleTap: _onDoubleTap,
-        child: child,
-      );
+    behavior: HitTestBehavior.translucent,
+    onTap: _fullscreen ? () => setState(() => _chromeVisible = !_chromeVisible) : null,
+    onDoubleTapDown: (d) => _doubleTapPos = d.localPosition,
+    onDoubleTap: _onDoubleTap,
+    child: child,
+  );
 
   Widget _singleView(BuildContext context) {
     final rect = _singlePageRect;
@@ -420,7 +462,6 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
           _pointers = math.max(_pointers, d.pointerCount);
           _dragDx += d.focalPointDelta.dx;
           _dragDy += d.focalPointDelta.dy;
-          if (scale > 1.01 || _settledScale > 1.01) setState(() {});
         },
         onInteractionEnd: (d) {
           final zoomed = scale > 1.02;
@@ -440,19 +481,21 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
         },
         child: SizedBox.fromSize(
           size: _viewport,
-          child: Stack(children: [
-            Positioned.fromRect(
-              rect: rect,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: PdfPageImage(
-                  key: ValueKey('page_$_page'),
-                  page: _page,
-                  targetWidthPx: ZoomMath.renderWidth(rect.width, _settledScale, _dpr),
+          child: Stack(
+            children: [
+              Positioned.fromRect(
+                rect: rect,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: PdfPageImage(
+                    key: ValueKey('page_$_page'),
+                    page: _page,
+                    targetWidthPx: ZoomMath.renderWidth(rect.width, _settledScale, _dpr),
+                  ),
                 ),
               ),
-            ),
-          ]),
+            ],
+          ),
         ),
       ),
     );
@@ -492,18 +535,24 @@ class ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSta
           return SizedBox(
             width: content.width,
             height: content.height,
-            child: Stack(children: [
-              for (var p = math.max(1, first - 1); p <= math.min(pageCount, last + 1); p++)
-                Positioned.fromRect(
-                  key: ValueKey('cpage_$p'),
-                  rect: pageRectContinuous(p),
-                  child: PdfPageImage(
-                    page: p,
-                    // Only the centre page gets the sharpest render (memory).
-                    targetWidthPx: ZoomMath.renderWidth(ps.width, p == centre ? _settledScale : math.min(_settledScale, 1.5), _dpr),
+            child: Stack(
+              children: [
+                for (var p = math.max(1, first - 1); p <= math.min(pageCount, last + 1); p++)
+                  Positioned.fromRect(
+                    key: ValueKey('cpage_$p'),
+                    rect: pageRectContinuous(p),
+                    child: PdfPageImage(
+                      page: p,
+                      // Only the centre page gets the sharpest render (memory).
+                      targetWidthPx: ZoomMath.renderWidth(
+                        ps.width,
+                        p == centre ? _settledScale : math.min(_settledScale, 1.5),
+                        _dpr,
+                      ),
+                    ),
                   ),
-                ),
-            ]),
+              ],
+            ),
           );
         },
       ),

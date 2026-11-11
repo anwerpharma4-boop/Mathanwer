@@ -98,7 +98,13 @@ class _ListenRepeatScreenState extends State<ListenRepeatScreen> {
     if (_recording) await _rec.stop();
     if (!mounted) return;
     if (_i + 1 >= widget.items.length) {
-      final again = await finishActivity(context, kind: 'speak', ref: widget.title, score: widget.items.length, total: widget.items.length);
+      final again = await finishActivity(
+        context,
+        kind: 'speak',
+        ref: widget.title,
+        score: widget.items.length,
+        total: widget.items.length,
+      );
       if (!mounted) return;
       if (again) {
         setState(() => _i = 0);
@@ -129,56 +135,83 @@ class _ListenRepeatScreenState extends State<ListenRepeatScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(children: [
-              Text('${_i + 1} / ${widget.items.length}', style: const TextStyle(fontSize: 16, color: AppColors.inkSoft)),
-              const SizedBox(height: 8),
-              Panel(
-                child: EnglishContent(
-                  child: Column(children: [
-                    if (item.word != null) WordPicture(word: item.word!, size: 170),
-                    const SizedBox(height: 8),
-                    Text(item.word?.text ?? item.text,
-                        key: const ValueKey('repeatText'), textAlign: TextAlign.center, style: learningText(36, color: widget.colour)),
-                  ]),
+            child: Column(
+              children: [
+                Text(
+                  '${_i + 1} / ${widget.items.length}',
+                  style: const TextStyle(fontSize: 16, color: AppColors.inkSoft),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Wrap(spacing: 16, runSpacing: 16, alignment: WrapAlignment.center, children: [
-                _RoundAction(
-                    key: const ValueKey('listenModel'),
-                    icon: Icons.volume_up_rounded,
-                    label: context.tr('listen'),
-                    colour: widget.colour,
-                    onTap: _play),
-                _RoundAction(
-                    key: const ValueKey('recordMine'),
-                    icon: _recording ? Icons.stop_rounded : Icons.mic_rounded,
-                    label: _recording ? context.tr('recording') : context.tr('record'),
-                    colour: _recording ? AppColors.coral : AppColors.berry,
-                    onTap: _toggleRecord),
-                _RoundAction(
-                    icon: Icons.person_rounded,
-                    label: context.tr('playMine'),
-                    colour: _hasMine ? AppColors.grape : Colors.black26,
-                    onTap: _hasMine ? _rec.playBack : null),
-              ]),
-              if (_micFailed)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(context.tr('micUnavailable'), textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkSoft)),
+                const SizedBox(height: 8),
+                Panel(
+                  child: EnglishContent(
+                    child: Column(
+                      children: [
+                        if (item.word != null) WordPicture(word: item.word!, size: 170),
+                        const SizedBox(height: 8),
+                        Text(
+                          item.word?.text ?? item.text,
+                          key: const ValueKey('repeatText'),
+                          textAlign: TextAlign.center,
+                          style: learningText(36, color: widget.colour),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              const SizedBox(height: 12),
-              Text(context.tr('speakingNote'), textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkSoft)),
-              const SizedBox(height: 16),
-              const SpeedControl(),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                key: const ValueKey('repeatNext'),
-                onPressed: _next,
-                icon: const Icon(Icons.arrow_forward_rounded),
-                label: Text(context.tr('next')),
-              ),
-            ]),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _RoundAction(
+                      key: const ValueKey('listenModel'),
+                      icon: Icons.volume_up_rounded,
+                      label: context.tr('listen'),
+                      colour: widget.colour,
+                      onTap: _play,
+                    ),
+                    _RoundAction(
+                      key: const ValueKey('recordMine'),
+                      icon: _recording ? Icons.stop_rounded : Icons.mic_rounded,
+                      label: _recording ? context.tr('recording') : context.tr('record'),
+                      colour: _recording ? AppColors.coral : AppColors.berry,
+                      onTap: _toggleRecord,
+                    ),
+                    _RoundAction(
+                      icon: Icons.person_rounded,
+                      label: context.tr('playMine'),
+                      colour: _hasMine ? AppColors.grape : Colors.black26,
+                      onTap: _hasMine ? _rec.playBack : null,
+                    ),
+                  ],
+                ),
+                if (_micFailed)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      context.tr('micUnavailable'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.inkSoft),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  context.tr('speakingNote'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.inkSoft),
+                ),
+                const SizedBox(height: 16),
+                const SpeedControl(),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  key: const ValueKey('repeatNext'),
+                  onPressed: _next,
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: Text(context.tr('next')),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -194,18 +227,21 @@ class _RoundAction extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [
-        Material(
-          color: colour,
-          shape: const CircleBorder(),
-          elevation: 3,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: SizedBox(width: 84, height: 84, child: Icon(icon, color: Colors.white, size: 44)),
-          ),
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Material(
+        color: colour,
+        shape: const CircleBorder(),
+        elevation: 3,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(width: 84, height: 84, child: Icon(icon, color: Colors.white, size: 44)),
         ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-      ]);
+      ),
+      const SizedBox(height: 6),
+      Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+    ],
+  );
 }

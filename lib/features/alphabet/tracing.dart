@@ -22,7 +22,8 @@ class TraceScore {
   bool get passed => coverage >= 0.55 && precision >= 0.55;
 
   @override
-  String toString() => 'TraceScore(coverage: ${coverage.toStringAsFixed(2)}, precision: ${precision.toStringAsFixed(2)})';
+  String toString() =>
+      'TraceScore(coverage: ${coverage.toStringAsFixed(2)}, precision: ${precision.toStringAsFixed(2)})';
 }
 
 /// Pure scoring on a grid (unit tested).
@@ -96,7 +97,10 @@ class TraceGrader {
 /// Lays out the guide glyph inside a square of [side].
 TextPainter glyphPainter(String letter, double side) {
   final tp = TextPainter(
-    text: TextSpan(text: letter, style: TextStyle(fontFamily: AppTheme.englishFont, fontSize: side * 0.78, height: 1.0)),
+    text: TextSpan(
+      text: letter,
+      style: TextStyle(fontFamily: AppTheme.englishFont, fontSize: side * 0.78, height: 1.0),
+    ),
     textDirection: TextDirection.ltr,
   )..layout();
   return tp;
@@ -172,9 +176,9 @@ class TracingPadState extends State<TracingPad> {
   }
 
   void clear() => setState(() {
-        _strokes.clear();
-        _score = null;
-      });
+    _strokes.clear();
+    _score = null;
+  });
 
   TraceScore? check() {
     final g = _grader;
@@ -194,53 +198,64 @@ class TracingPadState extends State<TracingPad> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, c) {
-      _side = math.min(c.maxWidth, c.maxHeight.isFinite ? c.maxHeight - 64 : c.maxWidth).clamp(160.0, 520.0);
-      final passed = _score?.passed ?? false;
-      return Column(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-          width: _side,
-          height: _side,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: passed ? AppColors.success : widget.colour.withValues(alpha: 0.3), width: 4),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: GestureDetector(
-              key: const ValueKey('tracingSurface'),
-              onPanStart: (d) => setState(() => _strokes.add([d.localPosition])),
-              onPanUpdate: (d) => setState(() => _strokes.last.add(d.localPosition)),
-              onPanEnd: (_) {
-                final g = _grader;
-                if (g == null) return;
-                final unit = [for (final s in _strokes) s.map((p) => Offset(p.dx / _side, p.dy / _side)).toList()];
-                // Auto-check once most of the letter is covered.
-                if (g.grade(unit, brush).coverage >= 0.7) check();
-              },
-              child: CustomPaint(
-                size: Size(_side, _side),
-                painter: _TracePainter(widget.letter, _strokes, widget.colour, passed),
+    return LayoutBuilder(
+      builder: (context, c) {
+        _side = math.min(c.maxWidth, c.maxHeight.isFinite ? c.maxHeight - 64 : c.maxWidth).clamp(160.0, 520.0);
+        final passed = _score?.passed ?? false;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: _side,
+              height: _side,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: passed ? AppColors.success : widget.colour.withValues(alpha: 0.3), width: 4),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: GestureDetector(
+                  key: const ValueKey('tracingSurface'),
+                  onPanStart: (d) => setState(() => _strokes.add([d.localPosition])),
+                  onPanUpdate: (d) => setState(() => _strokes.last.add(d.localPosition)),
+                  onPanEnd: (_) {
+                    final g = _grader;
+                    if (g == null) return;
+                    final unit = [for (final s in _strokes) s.map((p) => Offset(p.dx / _side, p.dy / _side)).toList()];
+                    // Auto-check once most of the letter is covered.
+                    if (g.grade(unit, brush).coverage >= 0.7) check();
+                  },
+                  child: CustomPaint(
+                    size: Size(_side, _side),
+                    painter: _TracePainter(widget.letter, _strokes, widget.colour, passed),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Wrap(spacing: 12, alignment: WrapAlignment.center, children: [
-          OutlinedButton.icon(
-              key: const ValueKey('traceClear'),
-              onPressed: clear,
-              icon: const Icon(Icons.cleaning_services_rounded),
-              label: Text(context.tr('clear'))),
-          FilledButton.icon(
-              key: const ValueKey('traceCheck'),
-              onPressed: check,
-              icon: Icon(passed ? Icons.star_rounded : Icons.check_rounded),
-              label: Text(passed ? context.tr('great') : context.tr('done'))),
-        ]),
-      ]);
-    });
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  key: const ValueKey('traceClear'),
+                  onPressed: clear,
+                  icon: const Icon(Icons.cleaning_services_rounded),
+                  label: Text(context.tr('clear')),
+                ),
+                FilledButton.icon(
+                  key: const ValueKey('traceCheck'),
+                  onPressed: check,
+                  icon: Icon(passed ? Icons.star_rounded : Icons.check_rounded),
+                  label: Text(passed ? context.tr('great') : context.tr('done')),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -262,12 +277,14 @@ class _TracePainter extends CustomPainter {
     }
     final tp = TextPainter(
       text: TextSpan(
-          text: letter,
-          style: TextStyle(
-              fontFamily: AppTheme.englishFont,
-              fontSize: size.width * 0.78,
-              height: 1.0,
-              color: passed ? AppColors.success.withValues(alpha: 0.35) : colour.withValues(alpha: 0.18))),
+        text: letter,
+        style: TextStyle(
+          fontFamily: AppTheme.englishFont,
+          fontSize: size.width * 0.78,
+          height: 1.0,
+          color: passed ? AppColors.success.withValues(alpha: 0.35) : colour.withValues(alpha: 0.18),
+        ),
+      ),
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, Offset((size.width - tp.width) / 2, (size.height - tp.height) / 2));

@@ -42,71 +42,84 @@ class DrawingHomeScreen extends StatelessWidget {
     return AppPage(
       title: context.tr('drawing'),
       colour: AppColors.coral,
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        Row(children: [
-          Expanded(
-            child: SizedBox(
-              height: 130,
-              child: BigTile(
-                key: const ValueKey('freeDraw'),
-                title: context.tr('freeDraw'),
-                icon: Icons.brush_rounded,
-                colour: AppColors.coral,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DrawingCanvasScreen())),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: SizedBox(
-              height: 130,
-              child: BigTile(
-                title: context.tr('trace'),
-                icon: Icons.gesture_rounded,
-                colour: AppColors.grape,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AlphabetScreen())),
-              ),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 18),
-        Text(context.tr('colouring'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        LayoutBuilder(builder: (context, c) {
-          final cols = gridColumns(c.maxWidth, minTile: 140);
-          return GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: cols,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Row(
             children: [
-              for (final page in colouringPages)
-                Material(
-                  key: ValueKey('colour_${page.id}'),
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(22),
-                    onTap: () => Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (_) => DrawingCanvasScreen(outline: page))),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(children: [
-                        Expanded(child: CustomPaint(painter: _OutlinePreview(page), size: Size.infinite)),
-                        EnglishContent(child: Text(page.word, style: learningText(18))),
-                      ]),
-                    ),
+              Expanded(
+                child: SizedBox(
+                  height: 130,
+                  child: BigTile(
+                    key: const ValueKey('freeDraw'),
+                    title: context.tr('freeDraw'),
+                    icon: Icons.brush_rounded,
+                    colour: AppColors.coral,
+                    onTap: () =>
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DrawingCanvasScreen())),
                   ),
                 ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 130,
+                  child: BigTile(
+                    title: context.tr('trace'),
+                    icon: Icons.gesture_rounded,
+                    colour: AppColors.grape,
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AlphabetScreen())),
+                  ),
+                ),
+              ),
             ],
-          );
-        }),
-        const SizedBox(height: 18),
-        Text(context.tr('myDrawings'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        const _Gallery(),
-      ]),
+          ),
+          const SizedBox(height: 18),
+          Text(context.tr('colouring'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          LayoutBuilder(
+            builder: (context, c) {
+              final cols = gridColumns(c.maxWidth, minTile: 140);
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: cols,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                children: [
+                  for (final page in colouringPages)
+                    Material(
+                      key: ValueKey('colour_${page.id}'),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(22),
+                        onTap: () =>
+                            Navigator.of(context)
+                                .push(MaterialPageRoute(builder: (_) => DrawingCanvasScreen(outline: page))),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: CustomPaint(painter: _OutlinePreview(page), size: Size.infinite),
+                              ),
+                              EnglishContent(child: Text(page.word, style: learningText(18))),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 18),
+          Text(context.tr('myDrawings'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          const _Gallery(),
+        ],
+      ),
     );
   }
 }
@@ -147,27 +160,33 @@ class _GalleryState extends State<_Gallery> {
   @override
   Widget build(BuildContext context) {
     if (_files.isEmpty) return Text(context.tr('noData'), style: const TextStyle(color: AppColors.inkSoft));
-    return Wrap(spacing: 10, runSpacing: 10, children: [
-      for (final f in _files)
-        Stack(children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.file(f, width: 120, height: 120, fit: BoxFit.cover, cacheWidth: 240),
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final f in _files)
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(f, width: 120, height: 120, fit: BoxFit.cover, cacheWidth: 240),
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.delete_rounded, color: Colors.white),
+                  style: IconButton.styleFrom(backgroundColor: Colors.black38, minimumSize: const Size(36, 36)),
+                  onPressed: () async {
+                    await f.delete();
+                    _load();
+                  },
+                ),
+              ),
+            ],
           ),
-          Positioned(
-            right: 0,
-            top: 0,
-            child: IconButton(
-              icon: const Icon(Icons.delete_rounded, color: Colors.white),
-              style: IconButton.styleFrom(backgroundColor: Colors.black38, minimumSize: const Size(36, 36)),
-              onPressed: () async {
-                await f.delete();
-                _load();
-              },
-            ),
-          ),
-        ]),
-    ]);
+      ],
+    );
   }
 }
 
@@ -197,8 +216,8 @@ class DrawingCanvasScreenState extends State<DrawingCanvasScreen> {
   double _side = 1;
 
   void undo() => setState(() {
-        if (strokes.isNotEmpty) strokes.removeLast();
-      });
+    if (strokes.isNotEmpty) strokes.removeLast();
+  });
 
   void clear() => setState(strokes.clear);
 
@@ -236,54 +255,84 @@ class DrawingCanvasScreenState extends State<DrawingCanvasScreen> {
       colour: AppColors.coral,
       actions: [
         if (word != null) SpeakButton(text: word.spoken, size: 44),
-        IconButton(key: const ValueKey('drawUndo'), tooltip: 'Undo', onPressed: undo, icon: const Icon(Icons.undo_rounded)),
         IconButton(
-            key: const ValueKey('drawClear'), tooltip: context.tr('clear'), onPressed: clear, icon: const Icon(Icons.delete_sweep_rounded)),
+          key: const ValueKey('drawUndo'),
+          tooltip: 'Undo',
+          onPressed: undo,
+          icon: const Icon(Icons.undo_rounded),
+        ),
         IconButton(
-            key: const ValueKey('drawSave'), tooltip: context.tr('save'), onPressed: save, icon: const Icon(Icons.save_alt_rounded)),
+          key: const ValueKey('drawClear'),
+          tooltip: context.tr('clear'),
+          onPressed: clear,
+          icon: const Icon(Icons.delete_sweep_rounded),
+        ),
+        IconButton(
+          key: const ValueKey('drawSave'),
+          tooltip: context.tr('save'),
+          onPressed: save,
+          icon: const Icon(Icons.save_alt_rounded),
+        ),
       ],
-      body: LayoutBuilder(builder: (context, c) {
-        final landscape = c.maxWidth > c.maxHeight;
-        final tools = _Tools(
-          colour: _colour,
-          width: _width,
-          eraser: _eraser,
-          vertical: landscape,
-          onColour: (col) => setState(() {
-            _colour = col;
-            _eraser = false;
-          }),
-          onWidth: (w) => setState(() => _width = w),
-          onEraser: () => setState(() => _eraser = !_eraser),
-        );
-        final canvasArea = LayoutBuilder(builder: (context, cc) {
-          _side = (cc.maxWidth < cc.maxHeight ? cc.maxWidth : cc.maxHeight) - 16;
-          return Center(
-            child: Container(
-              width: _side,
-              height: _side,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: GestureDetector(
-                  key: const ValueKey('drawingSurface'),
-                  onPanStart: (d) => setState(() => strokes.add(
-                      Stroke(_colour, _eraser ? _width * 2 : _width, _eraser)..points.add(d.localPosition / _side))),
-                  onPanUpdate: (d) => setState(() => strokes.last.points.add(d.localPosition / _side)),
-                  child: CustomPaint(size: Size.square(_side), painter: _DrawingPainter(strokes, widget.outline)),
-                ),
-              ),
-            ),
+      body: LayoutBuilder(
+        builder: (context, c) {
+          final landscape = c.maxWidth > c.maxHeight;
+          final tools = _Tools(
+            colour: _colour,
+            width: _width,
+            eraser: _eraser,
+            vertical: landscape,
+            onColour: (col) => setState(() {
+              _colour = col;
+              _eraser = false;
+            }),
+            onWidth: (w) => setState(() => _width = w),
+            onEraser: () => setState(() => _eraser = !_eraser),
           );
-        });
-        return landscape
-            ? Row(children: [tools, Expanded(child: canvasArea)])
-            : Column(children: [Expanded(child: canvasArea), tools]);
-      }),
+          final canvasArea = LayoutBuilder(
+            builder: (context, cc) {
+              _side = (cc.maxWidth < cc.maxHeight ? cc.maxWidth : cc.maxHeight) - 16;
+              return Center(
+                child: Container(
+                  width: _side,
+                  height: _side,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: GestureDetector(
+                      key: const ValueKey('drawingSurface'),
+                      onPanStart: (d) => setState(
+                        () => strokes.add(
+                          Stroke(_colour, _eraser ? _width * 2 : _width, _eraser)..points.add(d.localPosition / _side),
+                        ),
+                      ),
+                      onPanUpdate: (d) => setState(() => strokes.last.points.add(d.localPosition / _side)),
+                      child: CustomPaint(size: Size.square(_side), painter: _DrawingPainter(strokes, widget.outline)),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+          return landscape
+              ? Row(
+                  children: [
+                    tools,
+                    Expanded(child: canvasArea),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Expanded(child: canvasArea),
+                    tools,
+                  ],
+                );
+        },
+      ),
     );
   }
 }
@@ -347,8 +396,17 @@ class _Tools extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: vertical
-            ? SizedBox(width: 120, child: SingleChildScrollView(child: Wrap(alignment: WrapAlignment.center, children: children)))
-            : SingleChildScrollView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.all(6), child: Row(children: children)),
+            ? SizedBox(
+                width: 120,
+                child: SingleChildScrollView(
+                  child: Wrap(alignment: WrapAlignment.center, children: children),
+                ),
+              )
+            : SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.all(6),
+                child: Row(children: children),
+              ),
       ),
     );
   }

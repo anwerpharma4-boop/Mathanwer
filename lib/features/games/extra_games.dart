@@ -43,7 +43,9 @@ class MatchCaseGameState extends State<MatchCaseGame> {
   void initState() {
     super.initState();
     _newRound();
-    WidgetsBinding.instance.addPostFrameCallback((_) => AppScope.read(context).audio.say('Match the big and small letters.'));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => AppScope.read(context).audio.say('Match the big and small letters.'),
+    );
   }
 
   void _newRound() {
@@ -79,7 +81,13 @@ class MatchCaseGameState extends State<MatchCaseGame> {
         await Future<void>.delayed(const Duration(milliseconds: 500));
         if (!mounted) return;
         if (_round + 1 >= widget.rounds) {
-          final again = await finishActivity(context, kind: 'game_case', ref: 'match_case', score: _score, total: widget.rounds);
+          final again = await finishActivity(
+            context,
+            kind: 'game_case',
+            ref: 'match_case',
+            score: _score,
+            total: widget.rounds,
+          );
           if (!mounted) return;
           if (again) {
             setState(() {
@@ -108,7 +116,14 @@ class MatchCaseGameState extends State<MatchCaseGame> {
 
   @override
   Widget build(BuildContext context) {
-    Widget tile(String text, {required bool selected, required bool done, required VoidCallback onTap, required Color colour, Key? key}) {
+    Widget tile(
+      String text, {
+      required bool selected,
+      required bool done,
+      required VoidCallback onTap,
+      required Color colour,
+      Key? key,
+    }) {
       return AnimatedOpacity(
         key: key,
         opacity: done ? 0.25 : 1,
@@ -123,7 +138,9 @@ class MatchCaseGameState extends State<MatchCaseGame> {
             child: SizedBox(
               width: 86,
               height: 86,
-              child: Center(child: Text(text, style: learningText(52, color: selected ? Colors.white : colour))),
+              child: Center(
+                child: Text(text, style: learningText(52, color: selected ? Colors.white : colour)),
+              ),
             ),
           ),
         ),
@@ -134,47 +151,63 @@ class MatchCaseGameState extends State<MatchCaseGame> {
       title: context.tr('matchCase'),
       colour: AppColors.coral,
       body: EnglishContent(
-        child: Column(children: [
-          Text('${_round + 1} / ${widget.rounds}', style: learningText(18, color: AppColors.inkSoft)),
-          Text('Match the big and small letters.', style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600)),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Shake(
-                  trigger: _shake,
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Column(children: [
-                      for (final l in _left)
-                        Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: tile(l.toUpperCase(),
-                              key: ValueKey('upper_$l'),
-                              selected: _selected == l,
-                              done: _matched.contains(l),
-                              onTap: () => tapUpper(l),
-                              colour: AppColors.coral),
+        child: Column(
+          children: [
+            Text('${_round + 1} / ${widget.rounds}', style: learningText(18, color: AppColors.inkSoft)),
+            Text(
+              'Match the big and small letters.',
+              style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Shake(
+                    trigger: _shake,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          children: [
+                            for (final l in _left)
+                              Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: tile(
+                                  l.toUpperCase(),
+                                  key: ValueKey('upper_$l'),
+                                  selected: _selected == l,
+                                  done: _matched.contains(l),
+                                  onTap: () => tapUpper(l),
+                                  colour: AppColors.coral,
+                                ),
+                              ),
+                          ],
                         ),
-                    ]),
-                    const SizedBox(width: 40),
-                    Column(children: [
-                      for (final l in _right)
-                        Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: tile(l,
-                              key: ValueKey('lower_$l'),
-                              selected: false,
-                              done: _matched.contains(l),
-                              onTap: () => tapLower(l),
-                              colour: AppColors.primary),
+                        const SizedBox(width: 40),
+                        Column(
+                          children: [
+                            for (final l in _right)
+                              Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: tile(
+                                  l,
+                                  key: ValueKey('lower_$l'),
+                                  selected: false,
+                                  done: _matched.contains(l),
+                                  onTap: () => tapLower(l),
+                                  colour: AppColors.primary,
+                                ),
+                              ),
+                          ],
                         ),
-                    ]),
-                  ]),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -214,10 +247,15 @@ class ArrangeLettersGameState extends State<ArrangeLettersGame> {
   }
 
   void _start() {
-    final pool = (widget.words ??
-            vocabulary.where((w) => w.topic == topicAlphabet && w.image != null && RegExp(r'^[a-z]{3,5}$').hasMatch(w.text)).toList())
-        .toList()
-      ..shuffle(_rnd);
+    final pool =
+        (widget.words ??
+                vocabulary
+                    .where(
+                      (w) => w.topic == topicAlphabet && w.image != null && RegExp(r'^[a-z]{3,5}$').hasMatch(w.text),
+                    )
+                    .toList())
+            .toList()
+          ..shuffle(_rnd);
     _words = pool.take(widget.rounds).toList();
     _index = 0;
     _score = 0;
@@ -255,7 +293,13 @@ class ArrangeLettersGameState extends State<ArrangeLettersGame> {
         await Future<void>.delayed(const Duration(milliseconds: 400));
         if (!mounted) return;
         if (_index + 1 >= _words.length) {
-          final again = await finishActivity(context, kind: 'game_spell', ref: 'arrange', score: _score, total: _words.length);
+          final again = await finishActivity(
+            context,
+            kind: 'game_spell',
+            ref: 'arrange',
+            score: _score,
+            total: _words.length,
+          );
           if (!mounted) return;
           if (again) {
             setState(_start);
@@ -295,55 +339,74 @@ class ArrangeLettersGameState extends State<ArrangeLettersGame> {
       body: EnglishContent(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            Text('Put the letters in order.', style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600)),
-            Text('${_index + 1} / ${_words.length}', style: learningText(16, color: AppColors.inkSoft)),
-            const SizedBox(height: 8),
-            WordPicture(word: word, size: 150),
-            SpeakButton(text: word.spoken, colour: AppColors.grape),
-            const SizedBox(height: 16),
-            Shake(
-              trigger: _shake,
-              child: Wrap(spacing: 8, children: [
-                for (var i = 0; i < _tiles.length; i++)
-                  Container(
-                    key: ValueKey('slot_$i'),
-                    width: 58,
-                    height: 66,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: i < placedLetters.length ? (_solved ? AppColors.success : AppColors.grape) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.grape.withValues(alpha: 0.4), width: 2),
-                    ),
-                    child: Text(i < placedLetters.length ? placedLetters[i] : '',
-                        style: learningText(36, color: Colors.white)),
-                  ),
-              ]),
-            ),
-            const SizedBox(height: 22),
-            Wrap(spacing: 10, runSpacing: 10, children: [
-              for (var i = 0; i < _tiles.length; i++)
-                AnimatedOpacity(
-                  opacity: _placed.contains(i) ? 0.2 : 1,
-                  duration: const Duration(milliseconds: 200),
-                  child: Material(
-                    color: AppColors.sunshine,
-                    borderRadius: BorderRadius.circular(16),
-                    elevation: 2,
-                    child: InkWell(
-                      key: ValueKey('tile_$i'),
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () => place(i),
-                      child: SizedBox(
-                          width: 62, height: 70, child: Center(child: Text(_tiles[i], style: learningText(38)))),
-                    ),
-                  ),
+          child: Column(
+            children: [
+              Text(
+                'Put the letters in order.',
+                style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600),
+              ),
+              Text('${_index + 1} / ${_words.length}', style: learningText(16, color: AppColors.inkSoft)),
+              const SizedBox(height: 8),
+              WordPicture(word: word, size: 150),
+              SpeakButton(text: word.spoken, colour: AppColors.grape),
+              const SizedBox(height: 16),
+              Shake(
+                trigger: _shake,
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    for (var i = 0; i < _tiles.length; i++)
+                      Container(
+                        key: ValueKey('slot_$i'),
+                        width: 58,
+                        height: 66,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: i < placedLetters.length
+                              ? (_solved ? AppColors.success : AppColors.grape)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.grape.withValues(alpha: 0.4), width: 2),
+                        ),
+                        child: Text(
+                          i < placedLetters.length ? placedLetters[i] : '',
+                          style: learningText(36, color: Colors.white),
+                        ),
+                      ),
+                  ],
                 ),
-            ]),
-            const SizedBox(height: 16),
-            TextButton.icon(onPressed: undo, icon: const Icon(Icons.undo_rounded), label: Text(context.tr('back'))),
-          ]),
+              ),
+              const SizedBox(height: 22),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (var i = 0; i < _tiles.length; i++)
+                    AnimatedOpacity(
+                      opacity: _placed.contains(i) ? 0.2 : 1,
+                      duration: const Duration(milliseconds: 200),
+                      child: Material(
+                        color: AppColors.sunshine,
+                        borderRadius: BorderRadius.circular(16),
+                        elevation: 2,
+                        child: InkWell(
+                          key: ValueKey('tile_$i'),
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => place(i),
+                          child: SizedBox(
+                            width: 62,
+                            height: 70,
+                            child: Center(child: Text(_tiles[i], style: learningText(38))),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextButton.icon(onPressed: undo, icon: const Icon(Icons.undo_rounded), label: Text(context.tr('back'))),
+            ],
+          ),
         ),
       ),
     );
@@ -389,14 +452,17 @@ class MemoryGameState extends State<MemoryGame> {
   }
 
   void _start() {
-    final pool = (widget.words ?? vocabulary.where((w) => w.image != null && w.topic == topicAlphabet).toList()).toList()
-      ..shuffle(_rnd);
+    final pool =
+        (widget.words ?? vocabulary.where((w) => w.image != null && w.topic == topicAlphabet).toList()).toList()
+          ..shuffle(_rnd);
     final chosen = <VocabWord>[];
     for (final w in pool) {
       if (chosen.every((c) => c.text != w.text)) chosen.add(w);
       if (chosen.length == widget.pairs) break;
     }
-    _cards = [for (final w in chosen) ...[_Card(w, true), _Card(w, false)]]..shuffle(_rnd);
+    _cards = [
+      for (final w in chosen) ...[_Card(w, true), _Card(w, false)],
+    ]..shuffle(_rnd);
     _open.clear();
     _moves = 0;
     _busy = false;
@@ -426,8 +492,16 @@ class MemoryGameState extends State<MemoryGame> {
       if (_cards.every((c) => c.matched)) {
         if (!mounted) return;
         // Perfect = one move per pair; still always at least one star.
-        final score = (widget.pairs * 2 - _moves).clamp(0, widget.pairs) + (widget.pairs - (widget.pairs * 2 - _moves).clamp(0, widget.pairs)) ~/ 2;
-        final again = await finishActivity(context, kind: 'game_memory', ref: 'memory', score: score, total: widget.pairs);
+        final score =
+            (widget.pairs * 2 - _moves).clamp(0, widget.pairs) +
+            (widget.pairs - (widget.pairs * 2 - _moves).clamp(0, widget.pairs)) ~/ 2;
+        final again = await finishActivity(
+          context,
+          kind: 'game_memory',
+          ref: 'memory',
+          score: score,
+          total: widget.pairs,
+        );
         if (!mounted) return;
         if (again) {
           setState(_start);
@@ -454,27 +528,37 @@ class MemoryGameState extends State<MemoryGame> {
       title: 'Memory cards',
       colour: AppColors.teal,
       body: EnglishContent(
-        child: LayoutBuilder(builder: (context, c) {
-          final cols = c.maxWidth > c.maxHeight ? 6 : (c.maxWidth > 600 ? 4 : 3);
-          final rows = (_cards.length / cols).ceil();
-          final size = math.min((c.maxWidth - 32 - (cols - 1) * 10) / cols, (c.maxHeight - 60 - (rows - 1) * 10) / rows);
-          return Column(children: [
-            Text('Find the pairs.', style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Center(
-                child: Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    for (var i = 0; i < _cards.length; i++)
-                      _MemoryCard(key: ValueKey('card_$i'), card: _cards[i], size: size, onTap: () => flip(i)),
-                  ],
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final cols = c.maxWidth > c.maxHeight ? 6 : (c.maxWidth > 600 ? 4 : 3);
+            final rows = (_cards.length / cols).ceil();
+            final size = math.min(
+              (c.maxWidth - 32 - (cols - 1) * 10) / cols,
+              (c.maxHeight - 60 - (rows - 1) * 10) / rows,
+            );
+            return Column(
+              children: [
+                Text(
+                  'Find the pairs.',
+                  style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600),
                 ),
-              ),
-            ),
-          ]);
-        }),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Center(
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        for (var i = 0; i < _cards.length; i++)
+                          _MemoryCard(key: ValueKey('card_$i'), card: _cards[i], size: size, onTap: () => flip(i)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -559,7 +643,9 @@ class DragDropGameState extends State<DragDropGame> {
   void initState() {
     super.initState();
     _setup();
-    WidgetsBinding.instance.addPostFrameCallback((_) => AppScope.read(context).audio.say('Drag the picture to its letter.'));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => AppScope.read(context).audio.say('Drag the picture to its letter.'),
+    );
   }
 
   void _setup() {
@@ -583,7 +669,13 @@ class DragDropGameState extends State<DragDropGame> {
         if (_mistakes <= 1) _score++;
         if (!mounted) return;
         if (_round + 1 >= widget.rounds) {
-          final again = await finishActivity(context, kind: 'game_drag', ref: 'drag_drop', score: _score, total: widget.rounds);
+          final again = await finishActivity(
+            context,
+            kind: 'game_drag',
+            ref: 'drag_drop',
+            score: _score,
+            total: widget.rounds,
+          );
           if (!mounted) return;
           if (again) {
             setState(() {
@@ -614,53 +706,76 @@ class DragDropGameState extends State<DragDropGame> {
       title: 'Drag and drop',
       colour: AppColors.orange,
       body: EnglishContent(
-        child: Column(children: [
-          Text('Drag the picture to its letter.', style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600)),
-          Text('${_round + 1} / ${widget.rounds}', style: learningText(16, color: AppColors.inkSoft)),
-          Expanded(
-            child: Center(
-              child: Wrap(spacing: 14, runSpacing: 14, alignment: WrapAlignment.center, children: [
-                for (final w in remaining)
-                  Draggable<VocabWord>(
-                    key: ValueKey('drag_${w.id}'),
-                    data: w,
-                    feedback: Material(color: Colors.transparent, child: WordPicture(word: w, size: 110)),
-                    childWhenDragging: Opacity(opacity: 0.3, child: WordPicture(word: w, size: 100)),
-                    child: Panel(padding: const EdgeInsets.all(6), child: WordPicture(word: w, size: 100)),
-                  ),
-              ]),
+        child: Column(
+          children: [
+            Text(
+              'Drag the picture to its letter.',
+              style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-            child: Row(children: [
-              for (final l in _letters)
-                Expanded(
-                  child: DragTarget<VocabWord>(
-                    key: ValueKey('target_$l'),
-                    onAcceptWithDetails: (d) => drop(d.data, l),
-                    builder: (context, cand, _) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      margin: const EdgeInsets.all(6),
-                      height: 130,
-                      decoration: BoxDecoration(
-                        color: cand.isNotEmpty ? AppColors.sunshine : Colors.white,
-                        borderRadius: BorderRadius.circular(26),
-                        border: Border.all(color: AppColors.orange, width: 3),
+            Text('${_round + 1} / ${widget.rounds}', style: learningText(16, color: AppColors.inkSoft)),
+            Expanded(
+              child: Center(
+                child: Wrap(
+                  spacing: 14,
+                  runSpacing: 14,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    for (final w in remaining)
+                      Draggable<VocabWord>(
+                        key: ValueKey('drag_${w.id}'),
+                        data: w,
+                        feedback: Material(
+                          color: Colors.transparent,
+                          child: WordPicture(word: w, size: 110),
+                        ),
+                        childWhenDragging: Opacity(opacity: 0.3, child: WordPicture(word: w, size: 100)),
+                        child: Panel(
+                          padding: const EdgeInsets.all(6),
+                          child: WordPicture(word: w, size: 100),
+                        ),
                       ),
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Text('${l.toUpperCase()} $l', style: learningText(44, color: AppColors.orange)),
-                        Wrap(children: [
-                          for (final w in _items.where((w) => _done.contains(w.id) && w.text.startsWith(l)))
-                            WordPicture(word: w, size: 34),
-                        ]),
-                      ]),
-                    ),
-                  ),
+                  ],
                 ),
-            ]),
-          ),
-        ]),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
+              child: Row(
+                children: [
+                  for (final l in _letters)
+                    Expanded(
+                      child: DragTarget<VocabWord>(
+                        key: ValueKey('target_$l'),
+                        onAcceptWithDetails: (d) => drop(d.data, l),
+                        builder: (context, cand, _) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          margin: const EdgeInsets.all(6),
+                          height: 130,
+                          decoration: BoxDecoration(
+                            color: cand.isNotEmpty ? AppColors.sunshine : Colors.white,
+                            borderRadius: BorderRadius.circular(26),
+                            border: Border.all(color: AppColors.orange, width: 3),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('${l.toUpperCase()} $l', style: learningText(44, color: AppColors.orange)),
+                              Wrap(
+                                children: [
+                                  for (final w in _items.where((w) => _done.contains(w.id) && w.text.startsWith(l)))
+                                    WordPicture(word: w, size: 34),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

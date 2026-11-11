@@ -18,7 +18,11 @@ class SpeedControl extends StatelessWidget {
           key: const ValueKey('speedControl'),
           showSelectedIcon: false,
           segments: [
-            ButtonSegment(value: true, icon: const Icon(Icons.slow_motion_video_rounded), label: Text(context.tr('slow'))),
+            ButtonSegment(
+              value: true,
+              icon: const Icon(Icons.slow_motion_video_rounded),
+              label: Text(context.tr('slow')),
+            ),
             ButtonSegment(value: false, icon: const Icon(Icons.speed_rounded), label: Text(context.tr('normal'))),
           ],
           selected: {slow},

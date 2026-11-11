@@ -39,13 +39,13 @@ class AppTheme {
 
   /// Cycling colours for letters in recognition grids (as in the book).
   static Color letterColour(int i) => const [
-        Color(0xFFFF8C1A),
-        Color(0xFF2F6FD6),
-        Color(0xFFE5B800),
-        Color(0xFF2EAD5B),
-        Color(0xFFD6479B),
-        Color(0xFF8E5CC9),
-      ][i % 6];
+    Color(0xFFFF8C1A),
+    Color(0xFF2F6FD6),
+    Color(0xFFE5B800),
+    Color(0xFF2EAD5B),
+    Color(0xFFD6479B),
+    Color(0xFF8E5CC9),
+  ][i % 6];
 
   static ThemeData build({required bool arabic}) {
     final scheme = ColorScheme.fromSeed(
@@ -64,10 +64,7 @@ class AppTheme {
       fontFamilyFallback: const [englishFont, arabicFont],
     );
     return base.copyWith(
-      textTheme: base.textTheme.apply(
-        bodyColor: AppColors.ink,
-        displayColor: AppColors.ink,
-      ),
+      textTheme: base.textTheme.apply(bodyColor: AppColors.ink, displayColor: AppColors.ink),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -94,12 +91,8 @@ class AppTheme {
           textStyle: TextStyle(fontFamily: family, fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
-      iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(minimumSize: const Size(52, 52)),
-      ),
-      chipTheme: base.chipTheme.copyWith(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+      iconButtonTheme: IconButtonThemeData(style: IconButton.styleFrom(minimumSize: const Size(52, 52))),
+      chipTheme: base.chipTheme.copyWith(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
       sliderTheme: base.sliderTheme.copyWith(trackHeight: 6),
     );
   }
@@ -107,10 +100,4 @@ class AppTheme {
 
 /// Style for English learning content (always Andika, LTR).
 TextStyle learningText(double size, {Color color = AppColors.ink, FontWeight weight = FontWeight.w700}) =>
-    TextStyle(
-      fontFamily: AppTheme.englishFont,
-      fontSize: size,
-      color: color,
-      fontWeight: weight,
-      height: 1.2,
-    );
+    TextStyle(fontFamily: AppTheme.englishFont, fontSize: size, color: color, fontWeight: weight, height: 1.2);

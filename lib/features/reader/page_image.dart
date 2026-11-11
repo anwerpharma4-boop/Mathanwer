@@ -77,7 +77,9 @@ class _PdfPageImageState extends State<PdfPageImage> {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 6, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 6, offset: const Offset(0, 2)),
+          ],
         ),
         child: bytes != null
             ? Image.memory(
@@ -97,11 +99,14 @@ class _PdfPageImageState extends State<PdfPageImage> {
                           _ensure();
                         },
                       )
-                    : Column(mainAxisSize: MainAxisSize.min, children: [
-                        const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3)),
-                        const SizedBox(height: 8),
-                        Text('${widget.page}', style: const TextStyle(color: Colors.black38, fontSize: 18)),
-                      ]),
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3)),
+                          const SizedBox(height: 8),
+                          Text('${widget.page}', style: const TextStyle(color: Colors.black38, fontSize: 18)),
+                        ],
+                      ),
               ),
       ),
     );

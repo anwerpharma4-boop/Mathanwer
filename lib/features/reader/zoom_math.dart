@@ -76,7 +76,10 @@ class ZoomMath {
   /// Show [page] (content coordinates) entirely, at scale 1 by design of the
   /// layouts, aligned to its top.
   static Matrix4 showPage(Size viewport, Size content, Rect page, {double scale = 1}) {
-    final t = Offset(-page.left * scale + (viewport.width - page.width * scale) / 2, -page.top * scale + (viewport.height - page.height * scale) / 2);
+    final t = Offset(
+      -page.left * scale + (viewport.width - page.width * scale) / 2,
+      -page.top * scale + (viewport.height - page.height * scale) / 2,
+    );
     return clamp(make(scale, t), viewport, content);
   }
 

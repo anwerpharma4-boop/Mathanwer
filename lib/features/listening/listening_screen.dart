@@ -23,23 +23,31 @@ class ListeningScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           Panel(
-            child: Row(children: [
-              const Icon(Icons.record_voice_over_rounded, color: AppColors.teal, size: 36),
-              const SizedBox(width: 12),
-              Expanded(child: Text(context.tr('speakingNote'), style: const TextStyle(fontSize: 15))),
-              FilledButton(
-                key: const ValueKey('openListenRepeat'),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ListenRepeatScreen(title: context.tr('listenAndSay'), items: listenRepeatDefault()))),
-                child: Text(context.tr('play')),
-              ),
-            ]),
+            child: Row(
+              children: [
+                const Icon(Icons.record_voice_over_rounded, color: AppColors.teal, size: 36),
+                const SizedBox(width: 12),
+                Expanded(child: Text(context.tr('speakingNote'), style: const TextStyle(fontSize: 15))),
+                FilledButton(
+                  key: const ValueKey('openListenRepeat'),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ListenRepeatScreen(title: context.tr('listenAndSay'), items: listenRepeatDefault()),
+                    ),
+                  ),
+                  child: Text(context.tr('play')),
+                ),
+              ],
+            ),
           ),
           for (final u in units) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
-              child: Text('${context.tr('unit')} ${u.id} · ${arabic ? u.titleAr : u.title}',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(u.colour))),
+              child: Text(
+                '${context.tr('unit')} ${u.id} · ${arabic ? u.titleAr : u.title}',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(u.colour)),
+              ),
             ),
             for (final l in u.lessons)
               for (final s in l.scripts)
@@ -54,10 +62,14 @@ class ListeningScreen extends StatelessWidget {
                       ),
                       title: EnglishContent(child: Text(s.title, style: learningText(19))),
                       subtitle: Text(
-                          '${scriptKindLabel(s.kind)}${s.track != null ? ' · Track ${s.track}' : ''} · ${context.tr('page')} ${l.page}'),
+                        '${scriptKindLabel(s.kind)}${s.track != null ? ' · Track ${s.track}' : ''} · ${context.tr('page')} ${l.page}',
+                      ),
                       trailing: const Icon(Icons.play_circle_fill_rounded, color: AppColors.teal, size: 36),
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => ScriptPlayerScreen(script: s, bookPage: l.page, colour: Color(u.colour)))),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ScriptPlayerScreen(script: s, bookPage: l.page, colour: Color(u.colour)),
+                        ),
+                      ),
                     ),
                   ),
           ],

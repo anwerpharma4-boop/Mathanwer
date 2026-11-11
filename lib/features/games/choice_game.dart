@@ -128,8 +128,14 @@ class ChoiceGameScreenState extends State<ChoiceGameScreen> {
 
   Future<void> _finish() async {
     setState(() => _finished = true);
-    final again = await finishActivity(context,
-        kind: widget.kind, ref: widget.ref, unitId: widget.unitId, score: _score, total: _rounds.length);
+    final again = await finishActivity(
+      context,
+      kind: widget.kind,
+      ref: widget.ref,
+      unitId: widget.unitId,
+      score: _score,
+      total: _rounds.length,
+    );
     if (!mounted) return;
     if (again) {
       setState(_start);
@@ -165,50 +171,62 @@ class ChoiceGameScreenState extends State<ChoiceGameScreen> {
     return AppPage(
       title: widget.title,
       colour: widget.colour,
-      body: LayoutBuilder(builder: (context, c) {
-        final landscape = c.maxWidth > c.maxHeight * 1.1;
-        final prompt = _PromptView(
-          round: round,
-          answered: _correctPicked != null,
-          onReplay: _playPrompt,
-          colour: widget.colour,
-        );
-        final options = Shake(
-          trigger: _shake,
-          child: _OptionsGrid(
+      body: LayoutBuilder(
+        builder: (context, c) {
+          final landscape = c.maxWidth > c.maxHeight * 1.1;
+          final prompt = _PromptView(
             round: round,
-            wrong: _wrong,
-            correct: _correctPicked,
-            onTap: choose,
-            maxWidth: landscape ? c.maxWidth * 0.55 : c.maxWidth,
-          ),
-        );
-        return Column(children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(children: [
-              EnglishContent(
-                child: Text(widget.instruction,
-                    textAlign: TextAlign.center,
-                    style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600)),
+            answered: _correctPicked != null,
+            onReplay: _playPrompt,
+            colour: widget.colour,
+          );
+          final options = Shake(
+            trigger: _shake,
+            child: _OptionsGrid(
+              round: round,
+              wrong: _wrong,
+              correct: _correctPicked,
+              onTap: choose,
+              maxWidth: landscape ? c.maxWidth * 0.55 : c.maxWidth,
+            ),
+          );
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    EnglishContent(
+                      child: Text(
+                        widget.instruction,
+                        textAlign: TextAlign.center,
+                        style: learningText(18, color: AppColors.inkSoft, weight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _ProgressDots(count: _rounds.length, index: _index, colour: widget.colour),
+                  ],
+                ),
               ),
-              const SizedBox(height: 8),
-              _ProgressDots(count: _rounds.length, index: _index, colour: widget.colour),
-            ]),
-          ),
-          Expanded(
-            child: landscape
-                ? Row(children: [
-                    Expanded(child: Center(child: prompt)),
-                    Expanded(child: Center(child: options)),
-                  ])
-                : Column(children: [
-                    Expanded(flex: 5, child: Center(child: prompt)),
-                    Expanded(flex: 6, child: Center(child: options)),
-                  ]),
-          ),
-        ]);
-      }),
+              Expanded(
+                child: landscape
+                    ? Row(
+                        children: [
+                          Expanded(child: Center(child: prompt)),
+                          Expanded(child: Center(child: options)),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Expanded(flex: 5, child: Center(child: prompt)),
+                          Expanded(flex: 6, child: Center(child: options)),
+                        ],
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -221,19 +239,20 @@ class _ProgressDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Wrap(
-        spacing: 6,
-        children: List.generate(
-            count,
-            (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  width: i == index ? 26 : 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: i <= index ? colour : colour.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                )),
-      );
+    spacing: 6,
+    children: List.generate(
+      count,
+      (i) => AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: i == index ? 26 : 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: i <= index ? colour : colour.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    ),
+  );
 }
 
 class _PromptView extends StatelessWidget {
@@ -251,45 +270,61 @@ class _PromptView extends StatelessWidget {
     return EnglishContent(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          if (p.picture != null)
-            p.repeat > 1
-                ? ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: List.generate(p.repeat, (_) => WordPicture(word: p.picture!, size: p.repeat > 6 ? 70 : 92)),
-                    ),
-                  )
-                : WordPicture(word: p.picture!, size: 150),
-          if (showText)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(p.text!, key: const ValueKey('promptText'), style: learningText(p.text!.length <= 2 ? 84 : 46, color: colour)),
-            ),
-          if (!showText && p.picture == null)
-            Icon(Icons.hearing_rounded, size: 90, color: colour.withValues(alpha: 0.5)),
-          if (hasAudio) ...[
-            const SizedBox(height: 10),
-            SpeakButton(
-              key: const ValueKey('replayPrompt'),
-              text: p.speak ?? p.text ?? '',
-              size: 64,
-              colour: colour,
-              letterName: p.letterSound == null ? p.letterName : null,
-              letterSound: p.letterSound,
-            ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (p.picture != null)
+              p.repeat > 1
+                  ? ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: List.generate(
+                          p.repeat,
+                          (_) => WordPicture(word: p.picture!, size: p.repeat > 6 ? 70 : 92),
+                        ),
+                      ),
+                    )
+                  : WordPicture(word: p.picture!, size: 150),
+            if (showText)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  p.text!,
+                  key: const ValueKey('promptText'),
+                  style: learningText(p.text!.length <= 2 ? 84 : 46, color: colour),
+                ),
+              ),
+            if (!showText && p.picture == null)
+              Icon(Icons.hearing_rounded, size: 90, color: colour.withValues(alpha: 0.5)),
+            if (hasAudio) ...[
+              const SizedBox(height: 10),
+              SpeakButton(
+                key: const ValueKey('replayPrompt'),
+                text: p.speak ?? p.text ?? '',
+                size: 64,
+                colour: colour,
+                letterName: p.letterSound == null ? p.letterName : null,
+                letterSound: p.letterSound,
+              ),
+            ],
           ],
-        ]),
+        ),
       ),
     );
   }
 }
 
 class _OptionsGrid extends StatelessWidget {
-  const _OptionsGrid({required this.round, required this.wrong, required this.correct, required this.onTap, required this.maxWidth});
+  const _OptionsGrid({
+    required this.round,
+    required this.wrong,
+    required this.correct,
+    required this.onTap,
+    required this.maxWidth,
+  });
   final ChoiceRound round;
   final Set<int> wrong;
   final int? correct;
@@ -373,11 +408,18 @@ class _OptionTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(26),
                   border: Border.all(color: border, width: 5),
                 ),
-                child: Stack(alignment: Alignment.center, children: [
-                  content,
-                  if (state == _OptState.correct)
-                    const Positioned(top: 4, right: 4, child: Icon(Icons.check_circle_rounded, color: AppColors.success, size: 30)),
-                ]),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    content,
+                    if (state == _OptState.correct)
+                      const Positioned(
+                        top: 4,
+                        right: 4,
+                        child: Icon(Icons.check_circle_rounded, color: AppColors.success, size: 30),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -397,15 +439,16 @@ Future<void> openChoiceGame(
   required String ref,
   int? unitId,
   Color colour = AppColors.primary,
-}) =>
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ChoiceGameScreen(
-        title: title,
-        instruction: instruction,
-        makeRounds: makeRounds,
-        kind: kind,
-        ref: ref,
-        unitId: unitId,
-        colour: colour,
-      ),
-    ));
+}) => Navigator.of(context).push(
+  MaterialPageRoute(
+    builder: (_) => ChoiceGameScreen(
+      title: title,
+      instruction: instruction,
+      makeRounds: makeRounds,
+      kind: kind,
+      ref: ref,
+      unitId: unitId,
+      colour: colour,
+    ),
+  ),
+);

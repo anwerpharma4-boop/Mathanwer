@@ -46,8 +46,7 @@ class AppScope extends InheritedWidget {
   }
 
   /// Read without registering a dependency (for callbacks).
-  static AppServices read(BuildContext context) =>
-      context.getInheritedWidgetOfExactType<AppScope>()!.services;
+  static AppServices read(BuildContext context) => context.getInheritedWidgetOfExactType<AppScope>()!.services;
 
   @override
   bool updateShouldNotify(AppScope oldWidget) => services != oldWidget.services;

@@ -18,13 +18,7 @@ class ScriptLine {
 
 /// A dialogue, song, chant, story or list of phrases from the book.
 class Script {
-  const Script({
-    required this.title,
-    required this.kind,
-    required this.lines,
-    this.track,
-    this.instruction,
-  });
+  const Script({required this.title, required this.kind, required this.lines, this.track, this.instruction});
 
   final String title;
   final ScriptKind kind;

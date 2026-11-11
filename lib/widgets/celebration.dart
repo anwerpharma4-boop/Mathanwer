@@ -50,14 +50,8 @@ Future<bool> showCelebration(
       scale: CurvedAnimation(parent: a, curve: Curves.elasticOut),
       child: child,
     ),
-    pageBuilder: (context, _, _) => _CelebrationCard(
-      stars: stars,
-      score: score,
-      total: total,
-      badges: badges,
-      phrase: phrase,
-      canRetry: canRetry,
-    ),
+    pageBuilder: (context, _, _) =>
+        _CelebrationCard(stars: stars, score: score, total: total, badges: badges, phrase: phrase, canRetry: canRetry),
   );
   return res ?? false;
 }
@@ -100,13 +94,17 @@ class _CelebrationCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Mascot(size: 96, mood: MascotMood.cheer),
-                      EnglishContent(child: Text(phrase, style: learningText(30, color: AppColors.grass))),
+                      EnglishContent(
+                        child: Text(phrase, style: learningText(30, color: AppColors.grass)),
+                      ),
                       const SizedBox(height: 8),
                       StarRow(stars: stars, size: 52),
                       if (score != null && total != null) ...[
                         const SizedBox(height: 6),
-                        Text('$score / $total ${context.tr('correct')}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
+                        Text(
+                          '$score / $total ${context.tr('correct')}',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.inkSoft),
+                        ),
                       ],
                       for (final b in badges)
                         Padding(
@@ -118,24 +116,26 @@ class _CelebrationCard extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 18),
-                      Row(children: [
-                        if (canRetry)
+                      Row(
+                        children: [
+                          if (canRetry)
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                icon: const Icon(Icons.replay_rounded),
+                                label: Text(context.tr('retry')),
+                              ),
+                            ),
+                          if (canRetry) const SizedBox(width: 12),
                           Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              icon: const Icon(Icons.replay_rounded),
-                              label: Text(context.tr('retry')),
+                            child: FilledButton.icon(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              icon: const Icon(Icons.check_rounded),
+                              label: Text(context.tr('done')),
                             ),
                           ),
-                        if (canRetry) const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: () => Navigator.of(context).pop(false),
-                            icon: const Icon(Icons.check_rounded),
-                            label: Text(context.tr('done')),
-                          ),
-                        ),
-                      ]),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -160,9 +160,15 @@ class _ConfettiState extends State<Confetti> with SingleTickerProviderStateMixin
   late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(seconds: 3))..forward();
   final _rnd = math.Random();
   late final List<_Bit> _bits = List.generate(
-      40,
-      (_) => _Bit(_rnd.nextDouble(), _rnd.nextDouble() * 0.4, 0.5 + _rnd.nextDouble(),
-          AppColors.tiles[_rnd.nextInt(AppColors.tiles.length)], _rnd.nextDouble() * math.pi));
+    40,
+    (_) => _Bit(
+      _rnd.nextDouble(),
+      _rnd.nextDouble() * 0.4,
+      0.5 + _rnd.nextDouble(),
+      AppColors.tiles[_rnd.nextInt(AppColors.tiles.length)],
+      _rnd.nextDouble() * math.pi,
+    ),
+  );
 
   @override
   void dispose() {
@@ -172,9 +178,9 @@ class _ConfettiState extends State<Confetti> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _c,
-        builder: (context, _) => CustomPaint(painter: _ConfettiPainter(_bits, _c.value)),
-      );
+    animation: _c,
+    builder: (context, _) => CustomPaint(painter: _ConfettiPainter(_bits, _c.value)),
+  );
 }
 
 class _Bit {
@@ -234,11 +240,9 @@ class _ShakeState extends State<Shake> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _c,
-        builder: (context, child) => Transform.translate(
-          offset: Offset(math.sin(_c.value * math.pi * 5) * 10 * (1 - _c.value), 0),
-          child: child,
-        ),
-        child: widget.child,
-      );
+    animation: _c,
+    builder: (context, child) =>
+        Transform.translate(offset: Offset(math.sin(_c.value * math.pi * 5) * 10 * (1 - _c.value), 0), child: child),
+    child: widget.child,
+  );
 }

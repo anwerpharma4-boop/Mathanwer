@@ -2,18 +2,9 @@
 // These are NOT textbook content; they are app UI speech and are bundled as
 // British English audio together with the textbook vocabulary.
 
-const List<String> praisePhrases = [
-  'Well done!',
-  'Great job!',
-  'Excellent!',
-  'Super!',
-  'Fantastic!',
-];
+const List<String> praisePhrases = ['Well done!', 'Great job!', 'Excellent!', 'Super!', 'Fantastic!'];
 
-const List<String> retryPhrases = [
-  'Try again.',
-  'Have another go.',
-];
+const List<String> retryPhrases = ['Try again.', 'Have another go.'];
 
 const List<String> instructionPhrases = [
   'Listen and choose the picture.',
@@ -36,8 +27,4 @@ const List<String> instructionPhrases = [
   'You did it!',
 ];
 
-const List<String> allAppPhrases = [
-  ...praisePhrases,
-  ...retryPhrases,
-  ...instructionPhrases,
-];
+const List<String> allAppPhrases = [...praisePhrases, ...retryPhrases, ...instructionPhrases];

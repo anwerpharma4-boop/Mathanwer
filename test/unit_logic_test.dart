@@ -73,21 +73,23 @@ void main() {
 
     test('never substitutes American or other English voices', () {
       expect(
-          BritishVoice.pickVoice([
-            {'name': 'us', 'locale': 'en-US', 'network_required': '0'},
-            {'name': 'au', 'locale': 'en-AU', 'network_required': '0'},
-            {'name': 'in', 'locale': 'en-IN', 'network_required': '0'},
-          ]),
-          isNull);
+        BritishVoice.pickVoice([
+          {'name': 'us', 'locale': 'en-US', 'network_required': '0'},
+          {'name': 'au', 'locale': 'en-AU', 'network_required': '0'},
+          {'name': 'in', 'locale': 'en-IN', 'network_required': '0'},
+        ]),
+        isNull,
+      );
     });
 
     test('rejects voices that are not installed or need the network', () {
       expect(
-          BritishVoice.pickVoice([
-            {'name': 'a', 'locale': 'en-GB', 'network_required': '1'},
-            {'name': 'b', 'locale': 'en_GB', 'network_required': '0', 'features': 'notInstalled\tlegacySetLanguageVoice'},
-          ]),
-          isNull);
+        BritishVoice.pickVoice([
+          {'name': 'a', 'locale': 'en-GB', 'network_required': '1'},
+          {'name': 'b', 'locale': 'en_GB', 'network_required': '0', 'features': 'notInstalled\tlegacySetLanguageVoice'},
+        ]),
+        isNull,
+      );
     });
   });
 
@@ -174,14 +176,14 @@ void main() {
 
     test('tracing along the letter passes', () {
       final s = g.grade([
-        [const Offset(0.5, 0.15), const Offset(0.5, 0.85)]
+        [const Offset(0.5, 0.15), const Offset(0.5, 0.85)],
       ], 0.06);
       expect(s.passed, isTrue, reason: '$s');
     });
 
     test('scribbling elsewhere does not pass', () {
       final s = g.grade([
-        [const Offset(0.05, 0.05), const Offset(0.2, 0.9)]
+        [const Offset(0.05, 0.05), const Offset(0.2, 0.9)],
       ], 0.06);
       expect(s.passed, isFalse);
     });

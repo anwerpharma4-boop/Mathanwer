@@ -7,8 +7,7 @@ class SettingsController extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  static Future<SettingsController> load() async =>
-      SettingsController(await SharedPreferences.getInstance());
+  static Future<SettingsController> load() async => SettingsController(await SharedPreferences.getInstance());
 
   String get languageCode => _prefs.getString('language') ?? 'en';
   Future<void> setLanguage(String code) async {

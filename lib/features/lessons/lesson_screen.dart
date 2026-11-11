@@ -83,40 +83,50 @@ class _LessonScreenState extends State<LessonScreen> {
               return IconButton(
                 key: const ValueKey('completeLesson'),
                 tooltip: context.tr('markComplete'),
-                icon: Icon(done ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
-                    color: done ? AppColors.success : colour, size: 32),
+                icon: Icon(
+                  done ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+                  color: done ? AppColors.success : colour,
+                  size: 32,
+                ),
                 onPressed: _complete,
               );
             },
           ),
         ],
-        body: Column(children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: EnglishContent(
-              child: Text(lesson.title, style: learningText(24, color: colour), maxLines: 1, overflow: TextOverflow.ellipsis),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: EnglishContent(
+                child: Text(
+                  lesson.title,
+                  style: learningText(24, color: colour),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
-          ),
-          TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.center,
-            labelColor: colour,
-            indicatorColor: colour,
-            tabs: tabs,
-          ),
-          Expanded(
-            child: TabBarView(
-              physics: const NeverScrollableScrollPhysics(), // keep swipes for the page zoom
-              children: [
-                _BookPageTab(lesson: lesson, colour: colour),
-                _LearnTab(lesson: lesson, words: words, colour: colour, onComplete: _complete),
-                _ListenTab(lesson: lesson, colour: colour),
-                _WordsTab(words: words, colour: colour),
-                _PractiseTab(lesson: lesson, words: words, colour: colour, onComplete: _complete),
-              ],
+            TabBar(
+              isScrollable: true,
+              tabAlignment: TabAlignment.center,
+              labelColor: colour,
+              indicatorColor: colour,
+              tabs: tabs,
             ),
-          ),
-        ]),
+            Expanded(
+              child: TabBarView(
+                physics: const NeverScrollableScrollPhysics(), // keep swipes for the page zoom
+                children: [
+                  _BookPageTab(lesson: lesson, colour: colour),
+                  _LearnTab(lesson: lesson, words: words, colour: colour, onComplete: _complete),
+                  _ListenTab(lesson: lesson, colour: colour),
+                  _WordsTab(words: words, colour: colour),
+                  _PractiseTab(lesson: lesson, words: words, colour: colour, onComplete: _complete),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -147,59 +157,81 @@ class _BookPageTabState extends State<_BookPageTab> {
     final pages = widget.lesson.pages;
     final page = pages[_i];
     final aspect = AppScope.of(context).book.aspectRatio;
-    return Column(children: [
-      Expanded(
-        child: LayoutBuilder(builder: (context, c) {
-          final viewport = Size(c.maxWidth, c.maxHeight);
-          final rect = ZoomMath.fitPage(viewport, aspect);
-          return ListenableBuilder(
-            listenable: _tc,
-            builder: (context, _) => InteractiveViewer(
-              key: const ValueKey('lessonPageViewer'),
-              transformationController: _tc,
-              minScale: ZoomMath.minScale,
-              maxScale: ZoomMath.maxScale,
-              boundaryMargin: EdgeInsets.zero,
-              child: SizedBox.fromSize(
-                size: viewport,
-                child: Stack(children: [
-                  Positioned.fromRect(
-                    rect: rect,
-                    child: PdfPageImage(
-                      key: ValueKey('lessonpage_$page'),
-                      page: page,
-                      targetWidthPx: rect.width * ZoomMath.scaleOf(_tc.value).clamp(1.0, 3.0) * MediaQuery.devicePixelRatioOf(context),
+    return Column(
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final viewport = Size(c.maxWidth, c.maxHeight);
+              final rect = ZoomMath.fitPage(viewport, aspect);
+              return ListenableBuilder(
+                listenable: _tc,
+                builder: (context, _) => InteractiveViewer(
+                  key: const ValueKey('lessonPageViewer'),
+                  transformationController: _tc,
+                  minScale: ZoomMath.minScale,
+                  maxScale: ZoomMath.maxScale,
+                  boundaryMargin: EdgeInsets.zero,
+                  child: SizedBox.fromSize(
+                    size: viewport,
+                    child: Stack(
+                      children: [
+                        Positioned.fromRect(
+                          rect: rect,
+                          child: PdfPageImage(
+                            key: ValueKey('lessonpage_$page'),
+                            page: page,
+                            targetWidthPx:
+                                rect.width *
+                                ZoomMath.scaleOf(_tc.value).clamp(1.0, 3.0) *
+                                MediaQuery.devicePixelRatioOf(context),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ]),
-              ),
-            ),
-          );
-        }),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(10),
-        child: Wrap(spacing: 10, runSpacing: 8, alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          if (pages.length > 1)
-            SegmentedButton<int>(
-              segments: [for (var k = 0; k < pages.length; k++) ButtonSegment(value: k, label: Text('${pages[k]}'))],
-              selected: {_i},
-              onSelectionChanged: (s) => setState(() {
-                _i = s.first;
-                _tc.value = Matrix4.identity();
-              }),
-            )
-          else
-            Pill(text: '${context.tr('page')} $page / $bookPageCount', colour: widget.colour, icon: Icons.menu_book_rounded),
-          FilledButton.icon(
-            key: const ValueKey('openReader'),
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ReaderScreen(initialPage: page))),
-            icon: const Icon(Icons.open_in_full_rounded),
-            label: Text(context.tr('openInReader')),
+                ),
+              );
+            },
           ),
-        ]),
-      ),
-    ]);
+        ),
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (pages.length > 1)
+                SegmentedButton<int>(
+                  segments: [
+                    for (var k = 0; k < pages.length; k++) ButtonSegment(value: k, label: Text('${pages[k]}')),
+                  ],
+                  selected: {_i},
+                  onSelectionChanged: (s) => setState(() {
+                    _i = s.first;
+                    _tc.value = Matrix4.identity();
+                  }),
+                )
+              else
+                Pill(
+                  text: '${context.tr('page')} $page / $bookPageCount',
+                  colour: widget.colour,
+                  icon: Icons.menu_book_rounded,
+                ),
+              FilledButton.icon(
+                key: const ValueKey('openReader'),
+                onPressed: () =>
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => ReaderScreen(initialPage: page))),
+                icon: const Icon(Icons.open_in_full_rounded),
+                label: Text(context.tr('openInReader')),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -222,42 +254,59 @@ class _LearnTab extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           if (words.isNotEmpty) ...[
-            Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: [
-              for (final w in words.take(lesson.letters.isEmpty ? 12 : 2))
-                Panel(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    WordPicture(word: w, size: 110),
-                    Text(w.text, style: learningText(24)),
-                    SpeakButton(text: w.spoken, size: 42, colour: colour),
-                  ]),
-                ),
-            ]),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                for (final w in words.take(lesson.letters.isEmpty ? 12 : 2))
+                  Panel(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        WordPicture(word: w, size: 110),
+                        Text(w.text, style: learningText(24)),
+                        SpeakButton(text: w.spoken, size: 42, colour: colour),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 14),
           ],
           if (lesson.language.isNotEmpty)
             Panel(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Say it', style: learningText(20, color: colour)),
-                const SizedBox(height: 6),
-                for (final s in lesson.language)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(children: [
-                      SpeakButton(text: s, size: 42, colour: colour),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(s, style: learningText(22))),
-                    ]),
-                  ),
-              ]),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Say it', style: learningText(20, color: colour)),
+                  const SizedBox(height: 6),
+                  for (final s in lesson.language)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          SpeakButton(text: s, size: 42, colour: colour),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(s, style: learningText(22))),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
           if (lesson.bookActivities.isNotEmpty) ...[
             const SizedBox(height: 14),
             Text(context.tr('fromBook'), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
             const SizedBox(height: 6),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final a in lesson.bookActivities) Pill(text: a, colour: colour, icon: Icons.check_rounded),
-            ]),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final a in lesson.bookActivities) Pill(text: a, colour: colour, icon: Icons.check_rounded),
+              ],
+            ),
           ],
           if (lesson.kind == LessonKind.project) ...[
             const SizedBox(height: 14),
@@ -287,22 +336,29 @@ class _LetterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Panel(
-        child: Row(children: [
-          Text('${info.upper} ${info.lower}', style: learningText(72, color: colour)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Wrap(spacing: 10, runSpacing: 10, children: [
+    child: Row(
+      children: [
+        Text('${info.upper} ${info.lower}', style: learningText(72, color: colour)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
               SpeakButton(text: info.upper, letterName: info.lower, colour: colour),
               SpeakButton(text: info.lower, letterSound: info.lower, colour: AppColors.orange),
               OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LetterScreen(letter: info))),
+                onPressed: () =>
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => LetterScreen(letter: info))),
                 icon: const Icon(Icons.gesture_rounded),
                 label: Text(context.tr('trace')),
               ),
-            ]),
+            ],
           ),
-        ]),
-      );
+        ),
+      ],
+    ),
+  );
 }
 
 // ----------------------------------------------------------------- listen
@@ -316,33 +372,46 @@ class _ListenTab extends StatelessWidget {
     if (lesson.scripts.isEmpty && lesson.language.isEmpty) {
       return Center(child: Text(context.tr('noData')));
     }
-    return ListView(padding: const EdgeInsets.all(16), children: [
-      for (final s in lesson.scripts)
-        Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(12),
-            leading: CircleAvatar(backgroundColor: colour.withValues(alpha: 0.15), child: Icon(scriptKindIcon(s.kind), color: colour)),
-            title: EnglishContent(child: Text(s.title, style: learningText(20))),
-            subtitle: Text('${scriptKindLabel(s.kind)}${s.track != null ? ' · Track ${s.track}' : ''}'),
-            trailing: Icon(Icons.play_circle_fill_rounded, color: colour, size: 40),
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => ScriptPlayerScreen(script: s, bookPage: lesson.page, colour: colour))),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        for (final s in lesson.scripts)
+          Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(12),
+              leading: CircleAvatar(
+                backgroundColor: colour.withValues(alpha: 0.15),
+                child: Icon(scriptKindIcon(s.kind), color: colour),
+              ),
+              title: EnglishContent(child: Text(s.title, style: learningText(20))),
+              subtitle: Text('${scriptKindLabel(s.kind)}${s.track != null ? ' · Track ${s.track}' : ''}'),
+              trailing: Icon(Icons.play_circle_fill_rounded, color: colour, size: 40),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ScriptPlayerScreen(script: s, bookPage: lesson.page, colour: colour),
+                ),
+              ),
+            ),
           ),
-        ),
-      if (lesson.language.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: FilledButton.icon(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => ListenRepeatScreen(
+        if (lesson.language.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: FilledButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ListenRepeatScreen(
                     title: context.tr('listenAndSay'),
                     colour: colour,
-                    items: [for (final s in lesson.language) RepeatItem(s)]))),
-            icon: const Icon(Icons.record_voice_over_rounded),
-            label: Text(context.tr('listenAndSay')),
+                    items: [for (final s in lesson.language) RepeatItem(s)],
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.record_voice_over_rounded),
+              label: Text(context.tr('listenAndSay')),
+            ),
           ),
-        ),
-    ]);
+      ],
+    );
   }
 }
 
@@ -356,38 +425,50 @@ class _WordsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     if (words.isEmpty) return Center(child: Text(context.tr('noData')));
     return EnglishContent(
-      child: LayoutBuilder(builder: (context, c) {
-        final cols = gridColumns(c.maxWidth, minTile: 150);
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: cols, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.8),
-          itemCount: words.length + 1,
-          itemBuilder: (context, i) {
-            if (i == words.length) {
-              return BigTile(
-                title: context.tr('listenAndSay'),
-                icon: Icons.record_voice_over_rounded,
-                colour: colour,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ListenRepeatScreen(
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final cols = gridColumns(c.maxWidth, minTile: 150);
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: cols,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.8,
+            ),
+            itemCount: words.length + 1,
+            itemBuilder: (context, i) {
+              if (i == words.length) {
+                return BigTile(
+                  title: context.tr('listenAndSay'),
+                  icon: Icons.record_voice_over_rounded,
+                  colour: colour,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ListenRepeatScreen(
                         title: context.tr('listenAndSay'),
                         colour: colour,
-                        items: [for (final w in words) RepeatItem(w.spoken, word: w)]))),
+                        items: [for (final w in words) RepeatItem(w.spoken, word: w)],
+                      ),
+                    ),
+                  ),
+                );
+              }
+              final w = words[i];
+              return Panel(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    Expanded(child: WordPicture(word: w, size: 130)),
+                    Text(w.text, style: learningText(22)),
+                    SpeakButton(text: w.spoken, size: 42, colour: colour),
+                  ],
+                ),
               );
-            }
-            final w = words[i];
-            return Panel(
-              padding: const EdgeInsets.all(8),
-              child: Column(children: [
-                Expanded(child: WordPicture(word: w, size: 130)),
-                Text(w.text, style: learningText(22)),
-                SpeakButton(text: w.spoken, size: 42, colour: colour),
-              ]),
-            );
-          },
-        );
-      }),
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -412,72 +493,83 @@ class _PractiseTab extends StatelessWidget {
           title: 'Listen and choose',
           icon: Icons.hearing_rounded,
           colour: colour,
-          onTap: () => openChoiceGame(context,
-              title: lesson.title,
-              instruction: 'Listen and choose the picture.',
-              makeRounds: () => RoundFactory().listenAndChoose(pool, rounds: 6, options: 3, targets: pics),
-              kind: 'lesson',
-              ref: lesson.id,
-              unitId: lesson.unitId,
-              colour: colour),
+          onTap: () => openChoiceGame(
+            context,
+            title: lesson.title,
+            instruction: 'Listen and choose the picture.',
+            makeRounds: () => RoundFactory().listenAndChoose(pool, rounds: 6, options: 3, targets: pics),
+            kind: 'lesson',
+            ref: lesson.id,
+            unitId: lesson.unitId,
+            colour: colour,
+          ),
         ),
       if (pics.where((w) => w.image != null).length >= 2)
         BigTile(
           title: 'Word and picture',
           icon: Icons.image_search_rounded,
           colour: AppColors.primary,
-          onTap: () => openChoiceGame(context,
-              title: lesson.title,
-              instruction: 'Match the word to the picture.',
-              makeRounds: () => RoundFactory().wordToPicture(pool, rounds: 6, targets: pics),
-              kind: 'lesson',
-              ref: '${lesson.id}_read',
-              unitId: lesson.unitId,
-              colour: AppColors.primary),
+          onTap: () => openChoiceGame(
+            context,
+            title: lesson.title,
+            instruction: 'Match the word to the picture.',
+            makeRounds: () => RoundFactory().wordToPicture(pool, rounds: 6, targets: pics),
+            kind: 'lesson',
+            ref: '${lesson.id}_read',
+            unitId: lesson.unitId,
+            colour: AppColors.primary,
+          ),
         ),
       for (final l in lesson.letters)
         BigTile(
           title: '${context.tr('trace')} ${l.toUpperCase()} $l',
           icon: Icons.gesture_rounded,
           colour: AppColors.berry,
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
               builder: (_) => AppPage(
-                    title: '${context.tr('trace')} $l',
+                title: '${context.tr('trace')} $l',
+                colour: AppColors.berry,
+                body: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TracingPad(
+                    letter: l,
                     colour: AppColors.berry,
-                    body: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: TracingPad(
-                        letter: l,
-                        colour: AppColors.berry,
-                        onPassed: (s) => AppScope.read(context)
-                            .progress
-                            .recordResult(kind: 'trace', ref: l, score: (s.coverage * 10).round().clamp(0, 10), total: 10),
-                      ),
-                    ),
-                  ))),
+                    onPassed: (s) => AppScope.read(context).progress
+                        .recordResult(kind: 'trace', ref: l, score: (s.coverage * 10).round().clamp(0, 10), total: 10),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       if (lesson.letters.isNotEmpty)
         BigTile(
           title: context.tr('initialSound'),
           icon: Icons.abc_rounded,
           colour: AppColors.coral,
-          onTap: () => openChoiceGame(context,
-              title: context.tr('initialSound'),
-              instruction: 'Which picture starts with this sound?',
-              makeRounds: () => RoundFactory().initialSound(rounds: 4, letters: lesson.letters),
-              kind: 'lesson',
-              ref: '${lesson.id}_sound',
-              unitId: lesson.unitId,
-              colour: AppColors.coral),
+          onTap: () => openChoiceGame(
+            context,
+            title: context.tr('initialSound'),
+            instruction: 'Which picture starts with this sound?',
+            makeRounds: () => RoundFactory().initialSound(rounds: 4, letters: lesson.letters),
+            kind: 'lesson',
+            ref: '${lesson.id}_sound',
+            unitId: lesson.unitId,
+            colour: AppColors.coral,
+          ),
         ),
       if (lesson.language.isNotEmpty)
         BigTile(
           title: 'Listen and repeat',
           icon: Icons.record_voice_over_rounded,
           colour: AppColors.sky,
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => ListenRepeatScreen(
-                  title: lesson.title, items: [for (final s in lesson.language) RepeatItem(s)]))),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  ListenRepeatScreen(title: lesson.title, items: [for (final s in lesson.language) RepeatItem(s)]),
+            ),
+          ),
         ),
       BigTile(
         title: context.tr('markComplete'),
@@ -486,16 +578,18 @@ class _PractiseTab extends StatelessWidget {
         onTap: onComplete,
       ),
     ];
-    return LayoutBuilder(builder: (context, c) {
-      final cols = c.maxWidth > 700 ? 3 : 2;
-      return GridView.count(
-        padding: const EdgeInsets.all(16),
-        crossAxisCount: cols,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 14,
-        childAspectRatio: 1.15,
-        children: items,
-      );
-    });
+    return LayoutBuilder(
+      builder: (context, c) {
+        final cols = c.maxWidth > 700 ? 3 : 2;
+        return GridView.count(
+          padding: const EdgeInsets.all(16),
+          crossAxisCount: cols,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 14,
+          childAspectRatio: 1.15,
+          children: items,
+        );
+      },
+    );
   }
 }

@@ -109,12 +109,10 @@ class BundledAudio extends AudioOut {
   }
 
   @override
-  Future<void> letterName(String letter) =>
-      _playAsset('audio/letters/name_${letter.toLowerCase()}.ogg');
+  Future<void> letterName(String letter) => _playAsset('audio/letters/name_${letter.toLowerCase()}.ogg');
 
   @override
-  Future<void> letterSound(String letter) =>
-      _playAsset('audio/letters/sound_${letter.toLowerCase()}.ogg');
+  Future<void> letterSound(String letter) => _playAsset('audio/letters/sound_${letter.toLowerCase()}.ogg');
 
   @override
   Future<void> sfx(Sfx s) async {

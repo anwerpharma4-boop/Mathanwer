@@ -16,7 +16,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// 1x1 white PNG.
 final Uint8List tinyPng = base64Decode(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==');
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+);
 
 /// Book source that does not need the Android PDF renderer.
 class FakeBookSource extends BookSource {
@@ -91,7 +92,12 @@ Future<AppServices> makeServices({Map<String, Object> prefs = const {}, Progress
 }
 
 /// Pumps the whole app (or [home]) with fake services on a given screen size.
-Future<AppServices> pumpApp(WidgetTester tester, {Widget? home, Size size = const Size(400, 800), AppServices? services}) async {
+Future<AppServices> pumpApp(
+  WidgetTester tester, {
+  Widget? home,
+  Size size = const Size(400, 800),
+  AppServices? services,
+}) async {
   tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
@@ -104,10 +110,12 @@ Future<AppServices> pumpApp(WidgetTester tester, {Widget? home, Size size = cons
   if (home == null) {
     await tester.pumpWidget(EnglishForIraqApp(services: s));
   } else {
-    await tester.pumpWidget(AppScope(
-      services: s,
-      child: MaterialApp(home: home),
-    ));
+    await tester.pumpWidget(
+      AppScope(
+        services: s,
+        child: MaterialApp(home: home),
+      ),
+    );
   }
   await tester.pump();
   return s;

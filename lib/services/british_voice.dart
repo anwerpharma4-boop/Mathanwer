@@ -43,8 +43,7 @@ class BritishVoice {
     try {
       final raw = await _engine.getVoices;
       final voices = <Map<String, String>>[
-        for (final v in (raw as List? ?? const []))
-          (v as Map).map((k, val) => MapEntry('$k', '$val')),
+        for (final v in (raw as List? ?? const [])) (v as Map).map((k, val) => MapEntry('$k', '$val')),
       ];
       final chosen = pickVoice(voices);
       _voice = chosen == null ? null : {'name': chosen['name']!, 'locale': chosen['locale']!};

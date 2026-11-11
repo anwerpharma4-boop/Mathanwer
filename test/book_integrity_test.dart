@@ -56,8 +56,16 @@ void main() {
   });
 
   test('units match the Book map (pages 4-5)', () {
-    expect(units.map((u) => u.title).toList(),
-        ['Hello', 'My school', 'My toys', 'Revision', 'At the zoo', 'My body', 'My family', 'Revision']);
+    expect(units.map((u) => u.title).toList(), [
+      'Hello',
+      'My school',
+      'My toys',
+      'Revision',
+      'At the zoo',
+      'My body',
+      'My family',
+      'Revision',
+    ]);
     expect(units.where((u) => u.lessons.any((l) => l.kind == LessonKind.project)).map((u) => u.id), [1, 3, 5, 7]);
     expect(units.where((u) => u.lessons.any((l) => l.kind == LessonKind.story)).map((u) => u.id), [2, 4, 6, 8]);
   });
