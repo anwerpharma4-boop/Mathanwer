@@ -94,3 +94,8 @@ hooks:
   user_defines:
     sqlite3:
       source: system
+
+# record_android 2.3.0 (Nov 2026) references Kotlin classes missing from its
+# declared dependencies and does not compile; 2.2.0 is the last working one.
+dependency_overrides:
+  record_android: 2.2.0
