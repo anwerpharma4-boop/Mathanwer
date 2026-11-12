@@ -7,6 +7,9 @@ class SettingsController extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
+  /// Underlying local storage (browser localStorage on the web).
+  SharedPreferences get prefs => _prefs;
+
   static Future<SettingsController> load() async => SettingsController(await SharedPreferences.getInstance());
 
   String get languageCode => _prefs.getString('language') ?? 'en';

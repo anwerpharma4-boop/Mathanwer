@@ -18,8 +18,8 @@ void main() {
   test('all 26 letters have British letter-name and phonics audio', () {
     expect(alphabet.length, 26);
     for (final l in alphabet) {
-      expect(File('assets/audio/letters/name_${l.lower}.ogg').existsSync(), isTrue, reason: l.lower);
-      expect(File('assets/audio/letters/sound_${l.lower}.ogg').existsSync(), isTrue, reason: l.lower);
+      expect(File('assets/audio/letters/name_${l.lower}.mp3').existsSync(), isTrue, reason: l.lower);
+      expect(File('assets/audio/letters/sound_${l.lower}.mp3').existsSync(), isTrue, reason: l.lower);
       expect(File(l.cardImage).existsSync(), isTrue, reason: l.cardImage);
     }
     // British letter name for z.
@@ -52,7 +52,7 @@ void main() {
 
   test('sound effects exist', () {
     for (final s in ['correct', 'wrong', 'complete', 'tap', 'star', 'flip']) {
-      expect(File('assets/audio/sfx/$s.ogg').existsSync(), isTrue, reason: s);
+      expect(File('assets/audio/sfx/$s.mp3').existsSync(), isTrue, reason: s);
     }
   });
 

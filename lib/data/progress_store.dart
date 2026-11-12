@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
@@ -111,6 +112,97 @@ class ProgressStore extends ChangeNotifier {
   /// fallback if the database cannot be opened.
   factory ProgressStore.memory() => ProgressStore._(null);
 
+  /// Store kept in memory and saved as a JSON snapshot through [save]
+  /// (used on the web, where SQLite is not available: the snapshot goes to
+  /// the browser's local storage).
+  factory ProgressStore.snapshot({String? json, required void Function(String json) save}) {
+    final s = ProgressStore._(null);
+    if (json != null && json.isNotEmpty) {
+      try {
+        s._restore(jsonDecode(json) as Map<String, dynamic>);
+      } catch (e) {
+        debugPrint('Could not restore progress snapshot: $e');
+      }
+    }
+    s._snapshotSink = save;
+    return s;
+  }
+
+  void Function(String json)? _snapshotSink;
+  Timer? _snapshotTimer;
+
+  /// Schedules a snapshot save after a change (no-op for SQLite/memory).
+  void _touch() {
+    final sink = _snapshotSink;
+    if (sink == null) return;
+    _snapshotTimer?.cancel();
+    _snapshotTimer = Timer(const Duration(milliseconds: 300), () => sink(jsonEncode(toJson())));
+  }
+
+  /// Saves a pending snapshot immediately (e.g. when the app is hidden).
+  void flush() {
+    final sink = _snapshotSink;
+    if (sink == null || _snapshotTimer?.isActive != true) return;
+    _snapshotTimer!.cancel();
+    sink(jsonEncode(toJson()));
+  }
+
+  Map<String, dynamic> toJson() => {
+    'v': 1,
+    'lessons': {
+      for (final e in _lessons.entries) e.key: [e.value.status.index, e.value.stars],
+    },
+    'results': [
+      for (final r in _results)
+        [r.kind, r.ref, r.unitId, r.score, r.total, r.stars, r.createdAt.millisecondsSinceEpoch],
+    ],
+    'words': {
+      for (final e in _words.entries) e.key: [e.value.correct, e.value.wrong],
+    },
+    'daily': {
+      for (final k in {..._dailySeconds.keys, ..._dailyActivities.keys})
+        k: [_dailySeconds[k] ?? 0, _dailyActivities[k] ?? 0],
+    },
+    'bookmarks': _bookmarks.toList(),
+    'badges': {for (final e in _badges.entries) e.key: e.value.millisecondsSinceEpoch},
+    'kv': _kv,
+  };
+
+  void _restore(Map<String, dynamic> j) {
+    (j['lessons'] as Map? ?? {}).forEach((k, v) {
+      final l = v as List;
+      _lessons[k as String] = LessonProgress(LessonStatus.values[l[0] as int], l[1] as int);
+    });
+    for (final r in (j['results'] as List? ?? [])) {
+      final l = r as List;
+      _results.add(
+        ActivityResult(
+          kind: l[0] as String,
+          ref: l[1] as String,
+          unitId: l[2] as int?,
+          score: l[3] as int,
+          total: l[4] as int,
+          stars: l[5] as int,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(l[6] as int),
+        ),
+      );
+    }
+    (j['words'] as Map? ?? {}).forEach((k, v) {
+      final l = v as List;
+      _words[k as String] = WordStat(l[0] as int, l[1] as int);
+    });
+    (j['daily'] as Map? ?? {}).forEach((k, v) {
+      final l = v as List;
+      _dailySeconds[k as String] = l[0] as int;
+      _dailyActivities[k] = l[1] as int;
+    });
+    for (final b in (j['bookmarks'] as List? ?? [])) {
+      _bookmarks.add(b as int);
+    }
+    (j['badges'] as Map? ?? {}).forEach((k, v) => _badges[k as String] = DateTime.fromMillisecondsSinceEpoch(v as int));
+    (j['kv'] as Map? ?? {}).forEach((k, v) => _kv[k as String] = v as String);
+  }
+
   final Database? _db;
 
   final Map<String, LessonProgress> _lessons = {};
@@ -203,6 +295,7 @@ class ProgressStore extends ChangeNotifier {
   LessonProgress lesson(String id) => _lessons[id] ?? const LessonProgress(LessonStatus.notStarted, 0);
 
   Future<void> markLessonStarted(String id) async {
+    _touch();
     if (lesson(id).status != LessonStatus.notStarted) return;
     _lessons[id] = const LessonProgress(LessonStatus.inProgress, 0);
     await _db?.insert('lessons', {
@@ -216,6 +309,7 @@ class ProgressStore extends ChangeNotifier {
   }
 
   Future<void> completeLesson(String id, {int stars = 3}) async {
+    _touch();
     final prev = lesson(id);
     final best = stars > prev.stars ? stars : prev.stars;
     _lessons[id] = LessonProgress(LessonStatus.completed, best);
@@ -263,6 +357,7 @@ class ProgressStore extends ChangeNotifier {
       createdAt: DateTime.now(),
     );
     _results.add(r);
+    _touch();
     await _db?.insert('results', {
       'kind': kind,
       'ref': ref,
@@ -299,6 +394,7 @@ class ProgressStore extends ChangeNotifier {
   WordStat wordStat(String id) => _words[id] ?? WordStat(0, 0);
 
   Future<void> recordWord(String id, bool correct) async {
+    _touch();
     final s = _words.putIfAbsent(id, () => WordStat(0, 0));
     if (correct) {
       s.correct++;
@@ -341,11 +437,14 @@ class ProgressStore extends ChangeNotifier {
     await _saveDay(k);
   }
 
-  Future<void> _saveDay(String k) async => _db?.insert('daily', {
-    'day': k,
-    'seconds': _dailySeconds[k] ?? 0,
-    'activities': _dailyActivities[k] ?? 0,
-  }, conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<void> _saveDay(String k) async {
+    _touch();
+    await _db?.insert('daily', {
+      'day': k,
+      'seconds': _dailySeconds[k] ?? 0,
+      'activities': _dailyActivities[k] ?? 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
   int dailyGoal = 5;
 
@@ -356,6 +455,7 @@ class ProgressStore extends ChangeNotifier {
   bool isBookmarked(int page) => _bookmarks.contains(page);
 
   Future<void> toggleBookmark(int page) async {
+    _touch();
     if (_bookmarks.remove(page)) {
       await _db?.delete('bookmarks', where: 'page = ?', whereArgs: [page]);
     } else {
@@ -369,6 +469,7 @@ class ProgressStore extends ChangeNotifier {
   String? value(String key) => _kv[key];
 
   Future<void> setValue(String key, String value) async {
+    _touch();
     _kv[key] = value;
     await _db?.insert('kv', {'key': key, 'value': value}, conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -383,6 +484,7 @@ class ProgressStore extends ChangeNotifier {
     if (_badges.containsKey(id)) return;
     final now = DateTime.now();
     _badges[id] = now;
+    _touch();
     newlyEarned.add(badgeDefs.firstWhere((b) => b.id == id));
     await _db?.insert('badges', {
       'id': id,
@@ -448,6 +550,7 @@ class ProgressStore extends ChangeNotifier {
   double get overallCompletion => allLessons.isEmpty ? 0 : completedLessonCount / allLessons.length;
 
   Future<void> resetAll() async {
+    _touch();
     for (final t in ['lessons', 'results', 'words', 'daily', 'bookmarks', 'badges', 'kv']) {
       await _db?.delete(t);
     }

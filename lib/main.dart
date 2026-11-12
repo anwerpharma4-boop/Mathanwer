@@ -1,5 +1,6 @@
 import 'dart:ui' show PlatformDispatcher;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -21,7 +22,16 @@ Future<void> main() async {
   final settings = await SettingsController.load();
   ProgressStore progress;
   try {
-    progress = await ProgressStore.open();
+    if (kIsWeb) {
+      // No SQLite in the browser: keep a JSON snapshot in local storage.
+      const key = 'progress_v1';
+      progress = ProgressStore.snapshot(
+        json: settings.prefs.getString(key),
+        save: (json) => settings.prefs.setString(key, json),
+      );
+    } else {
+      progress = await ProgressStore.open();
+    }
   } catch (e) {
     debugPrint('Progress database unavailable, using memory only: $e');
     progress = ProgressStore.memory();

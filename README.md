@@ -1,6 +1,6 @@
 # English for Iraq — 1st Primary (interactive app)
 
-An offline Android app (Flutter) for children aged 6–7 that combines:
+An offline app (Flutter) for **Android** and **iPad/iPhone (web version in Safari)** for children aged 6–7 that combines:
 
 1. **The original textbook**: *English for Iraq – 1st Primary – Pupil's Book* (Jenny Quintana and Helen O'Neill,
    Garnet Education), all **96 pages**, shown **unchanged** in a full PDF reader.
@@ -32,6 +32,7 @@ No internet, no accounts, no ads, no tracking. Progress is stored only on the de
 | English / Arabic (RTL) interface | ✅ tests |
 | Phone / tablet / landscape layouts | ✅ rendered and reviewed (screenshots) |
 | Debug and release APK build | ✅ built in CI-like environment |
+| Web version for iPad (Safari, add to Home Screen, works offline) | ✅ built; tested in Chromium with iPad emulation: textbook (pdf.js), pinch zoom, audio, offline reload, saved progress. Not yet tested on a real iPad. |
 | Install and run on a real device / emulator, airplane-mode test | ⚠️ **not done here** – no Android device or emulator (no KVM) was available. Use [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md). |
 
 ---
@@ -72,7 +73,7 @@ No internet, no accounts, no ads, no tracking. Progress is stored only on the de
 ## Audio (British English)
 
 * Locale **en-GB only**. All words, sentences, dialogue lines, song lyrics, story sentences and app instructions
-  are pre-generated and bundled (`assets/audio/`, ~9 MB, Ogg Vorbis), so the app speaks fully offline.
+  are pre-generated and bundled (`assets/audio/`, ~7 MB, MP3 — plays on Android and in Safari), so the app speaks fully offline.
 * Voice: open-source **Piper** neural TTS, voice **`en_GB-cori-high`** (UK English female; trained on
   public-domain LibriVox recordings). Phonemes come from espeak-ng British English — e.g. *tomato*
   /təmˈɑːtəʊ/, *car* /kˈɑː/ (non-rhotic), *z* /zˈɛd/, *orange* /ˈɒɹɪndʒ/.
@@ -143,6 +144,29 @@ docs/             manual device test checklist
 ```
 
 ---
+
+## iPad / iPhone (web version)
+
+iOS cannot install Android APKs, so the app is also published as an offline web app.
+
+1. One-time: on GitHub open **Settings → Pages → Source: GitHub Actions**. The workflow
+   `.github/workflows/web.yml` then builds and publishes the site on every push to
+   **https://anwerpharma4-boop.github.io/Mathanwer/**.
+2. On the iPad open that address in **Safari** (with internet, once) and wait about a minute while
+   the book, audio and pictures (~40 MB) are saved for offline use.
+3. Tap **Share → Add to Home Screen**. Open the app from the new icon (it runs full screen).
+   Open it once from the icon while still online, so that copy also saves everything; after
+   that it works without internet.
+
+Notes: the home-screen app keeps its own storage, separate from Safari. Progress and drawings are
+stored on the iPad (browser storage); clearing Safari website data deletes them. Tap anywhere once
+after opening so iOS allows sound.
+
+**بالعربية:** افتح الرابط أعلاه في متصفح Safari على الآيباد مع اتصال بالإنترنت لأول مرة وانتظر دقيقة،
+ثم اضغط زر المشاركة ← «إضافة إلى الشاشة الرئيسية». افتح التطبيق من الأيقونة الجديدة مرة واحدة والإنترنت متصل،
+وبعدها يعمل دون إنترنت.
+
+Build it yourself: `tool/build_web.sh /Mathanwer/` → static files in `build/web` (any HTTPS static host works).
 
 ## Build
 

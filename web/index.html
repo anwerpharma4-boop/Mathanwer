@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="English for Iraq – 1st Primary: the original Pupil's Book and interactive English lessons. Works offline.">
+  <!-- The app handles pinch-zoom itself; stop Safari from zooming the whole page. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <!-- iPad / iPhone: "Add to Home Screen" runs full screen like an app. -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="English Iraq">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <meta name="theme-color" content="#4F8DF9">
+
+  <title>English for Iraq</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; height: 100%; background: #FFF8EE; overscroll-behavior: none; }
+    #splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; font-family: -apple-system, system-ui, sans-serif; color: #26324A; gap: 16px; }
+    #splash img { width: 120px; height: 120px; border-radius: 28px; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+    #splash .bar { width: 180px; height: 8px; border-radius: 4px; background: #E3E8F2; overflow: hidden; }
+    #splash .bar::after { content: ""; display: block; width: 40%; height: 100%; background: #4F8DF9;
+      border-radius: 4px; animation: slide 1.2s ease-in-out infinite; }
+    @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <img src="icons/Icon-192.png" alt="">
+    <div>English for Iraq</div>
+    <div class="bar"></div>
+  </div>
+
+  <!-- pdf.js (bundled locally for offline use) used to show the original textbook pages. -->
+  <script src="pdfjs/pdf.min.mjs" type="module"></script>
+  <script type="module">
+    var { pdfjsLib } = globalThis;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs/pdf.worker.min.mjs', document.baseURI).href;
+    var pdfRenderOptions = { cMapPacked: true };
+  </script>
+
+  <script>
+    // Hide the splash once Flutter draws its first frame.
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      if (s) s.remove();
+    });
+    // Offline support: cache the whole app on first visit.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('SW failed', e); });
+      });
+    }
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

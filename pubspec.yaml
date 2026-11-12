@@ -44,6 +44,7 @@ dependencies:
   record: ^7.1.2
   path: ^1.9.1
   vector_math: ^2.4.4
+  web: ^1.1.2
 
 dev_dependencies:
   flutter_test:

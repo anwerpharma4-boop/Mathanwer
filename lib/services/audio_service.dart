@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'british_voice.dart';
+import 'web_audio/element_player.dart';
 
 enum Sfx { correct, wrong, complete, tap, star, flip }
 
@@ -19,6 +20,9 @@ abstract class AudioOut {
   Future<void> sfx(Sfx s);
   Future<void> stop();
   bool hasClip(String text);
+
+  /// Web only: unlocks audio on the first tap (iPad/iPhone Safari).
+  void unlock() {}
   double get rate;
   set rate(double v);
   bool sfxEnabled = true;
@@ -34,6 +38,10 @@ class BundledAudio extends AudioOut {
   final BritishVoice _voice;
   final AudioPlayer _speech = AudioPlayer(playerId: 'speech');
   final AudioPlayer _fx = AudioPlayer(playerId: 'sfx');
+
+  /// On the web: persistent <audio> elements (see element_player.dart).
+  final ElementPlayer? _webSpeech = createElementPlayer();
+  final ElementPlayer? _webFx = createElementPlayer();
   Completer<void>? _done;
   double _rate = 1.0;
   int _token = 0;
@@ -53,6 +61,7 @@ class BundledAudio extends AudioOut {
   }
 
   Future<void> _init() async {
+    if (_webSpeech != null) return;
     try {
       await _speech.setReleaseMode(ReleaseMode.stop);
       await _fx.setReleaseMode(ReleaseMode.stop);
@@ -77,9 +86,23 @@ class BundledAudio extends AudioOut {
   @override
   bool hasClip(String text) => _clips.containsKey(text);
 
+  /// URL of a bundled asset in the web build.
+  static String _webUrl(String path) => 'assets/assets/$path';
+
+  @override
+  void unlock() {
+    _webSpeech?.unlock(_webUrl('audio/sfx/silence.mp3'));
+    _webFx?.unlock(_webUrl('audio/sfx/silence.mp3'));
+  }
+
   Future<bool> _playAsset(String path) async {
     final token = ++_token;
     _finish();
+    final web = _webSpeech;
+    if (web != null) {
+      web.stop();
+      return web.play(_webUrl(path), rate: _rate);
+    }
     try {
       await _speech.stop();
       if (token != _token) return true;
@@ -111,17 +134,22 @@ class BundledAudio extends AudioOut {
   }
 
   @override
-  Future<void> letterName(String letter) => _playAsset('audio/letters/name_${letter.toLowerCase()}.ogg');
+  Future<void> letterName(String letter) => _playAsset('audio/letters/name_${letter.toLowerCase()}.mp3');
 
   @override
-  Future<void> letterSound(String letter) => _playAsset('audio/letters/sound_${letter.toLowerCase()}.ogg');
+  Future<void> letterSound(String letter) => _playAsset('audio/letters/sound_${letter.toLowerCase()}.mp3');
 
   @override
   Future<void> sfx(Sfx s) async {
     if (!sfxEnabled) return;
+    final web = _webFx;
+    if (web != null) {
+      web.play(_webUrl('audio/sfx/${s.name}.mp3'), volume: 0.8);
+      return;
+    }
     try {
       await _fx.stop();
-      await _fx.play(AssetSource('audio/sfx/${s.name}.ogg'), volume: 0.8);
+      await _fx.play(AssetSource('audio/sfx/${s.name}.mp3'), volume: 0.8);
     } catch (e) {
       debugPrint('sfx failed: $e');
     }
@@ -131,8 +159,9 @@ class BundledAudio extends AudioOut {
   Future<void> stop() async {
     _token++;
     _finish();
+    _webSpeech?.stop();
     try {
-      await _speech.stop();
+      if (_webSpeech == null) await _speech.stop();
       await _voice.stop();
     } catch (_) {}
   }

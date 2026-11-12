@@ -14,15 +14,27 @@ class VoiceRecorder {
   final AudioPlayer _player = AudioPlayer(playerId: 'myvoice');
   String? _lastPath;
 
-  bool get hasRecording => _lastPath != null && File(_lastPath!).existsSync();
+  bool get hasRecording {
+    final path = _lastPath;
+    if (path == null) return false;
+    // On the web the result is a blob URL held by the browser.
+    if (kIsWeb) return true;
+    return File(path).existsSync();
+  }
 
   Future<bool> start() async {
     try {
       final rec = _rec ??= AudioRecorder();
       if (!await rec.hasPermission()) return false;
-      final dir = await getTemporaryDirectory();
-      final path = p.join(dir.path, 'my_voice.m4a');
-      await rec.start(const RecordConfig(encoder: AudioEncoder.aacLc, numChannels: 1), path: path);
+      if (kIsWeb) {
+        // Safari records AAC (mp4); Chrome/Firefox record Opus (webm).
+        final encoder = await rec.isEncoderSupported(AudioEncoder.aacLc) ? AudioEncoder.aacLc : AudioEncoder.opus;
+        await rec.start(RecordConfig(encoder: encoder, numChannels: 1), path: '');
+      } else {
+        final dir = await getTemporaryDirectory();
+        final path = p.join(dir.path, 'my_voice.m4a');
+        await rec.start(const RecordConfig(encoder: AudioEncoder.aacLc, numChannels: 1), path: path);
+      }
       return true;
     } catch (e) {
       debugPrint('Recording unavailable: $e');
@@ -43,7 +55,7 @@ class VoiceRecorder {
     if (path == null) return;
     try {
       await _player.stop();
-      await _player.play(DeviceFileSource(path));
+      await _player.play(kIsWeb ? UrlSource(path) : DeviceFileSource(path));
     } catch (e) {
       debugPrint('Playback failed: $e');
     }

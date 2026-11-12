@@ -6,13 +6,13 @@ trained on public-domain LibriVox recordings; phonemes from espeak-ng "en",
 which is British English: non-rhotic, "zed", /təˈmɑːtəʊ/ ...).
 
 Inputs : build/speech.json  (from `dart run tool/export_speech.dart`)
-Outputs: assets/audio/speech/*.ogg + assets/audio/speech_manifest.json
-         assets/audio/letters/name_<x>.ogg, sound_<x>.ogg
-         assets/audio/sfx/*.ogg
+Outputs: assets/audio/speech/*.mp3 + assets/audio/speech_manifest.json
+         assets/audio/letters/name_<x>.mp3, sound_<x>.mp3
+         assets/audio/sfx/*.mp3
 
 Usage:
   python tool/generate_audio.py --model /path/en_GB-cori-high.onnx
-Requires: piper-tts (pip), numpy, ffmpeg with libvorbis.
+Requires: piper-tts (pip), numpy, ffmpeg with libmp3lame.
 """
 import argparse
 import hashlib
@@ -49,7 +49,7 @@ LETTER_SOUNDS = {
 
 
 def clip_name(text):
-    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16] + ".ogg"
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16] + ".mp3"
 
 
 def write_wav(path, audio, rate):
@@ -68,9 +68,10 @@ def pad(audio, rate, lead=0.08, tail=0.15):
                            np.zeros(int(rate * tail), audio.dtype)])
 
 
-def to_ogg(wav_path, ogg_path, quality=3):
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", wav_path, "-ac", "1",
-                    "-c:a", "libvorbis", "-q:a", str(quality), ogg_path], check=True)
+def to_mp3(wav_path, mp3_path, quality=6):
+    """MP3 plays everywhere: Android, iPad/iPhone Safari and desktop browsers."""
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", wav_path, "-ac", "1", "-ar", "22050",
+                    "-c:a", "libmp3lame", "-q:a", str(quality), mp3_path], check=True)
 
 
 def active_region(audio, rate, rel=0.05):
@@ -188,7 +189,7 @@ def make_sfx(out_dir, tmp):
     for name, audio in sounds.items():
         wav = os.path.join(tmp, name + ".wav")
         write_wav(wav, audio, r)
-        to_ogg(wav, os.path.join(out_dir, name + ".ogg"), quality=4)
+        to_mp3(wav, os.path.join(out_dir, name + ".mp3"), quality=5)
 
 
 def main():
@@ -224,7 +225,7 @@ def main():
             audio, score = synth_text(voice, text, LENGTH_SCALE)
             report.append((score, text))
             write_wav(wav, pad(audio, rate), rate)
-            to_ogg(wav, target)
+            to_mp3(wav, target)
             if i % 50 == 0:
                 print(f"{i}/{len(data['texts'])}", flush=True)
 
@@ -234,11 +235,11 @@ def main():
             audio, score = synth_text(voice, letter.upper() + "!", 1.1)
             report.append((score, "name " + letter))
             write_wav(wav, pad(audio, rate, tail=0.2), rate)
-            to_ogg(wav, os.path.join(letters_dir, f"name_{letter}.ogg"))
+            to_mp3(wav, os.path.join(letters_dir, f"name_{letter}.mp3"))
             audio, score = synth_phonemes(voice, LETTER_SOUNDS[letter], 1.3)
             report.append((score, "sound " + letter))
             write_wav(wav, pad(audio, rate, tail=0.2), rate)
-            to_ogg(wav, os.path.join(letters_dir, f"sound_{letter}.ogg"))
+            to_mp3(wav, os.path.join(letters_dir, f"sound_{letter}.mp3"))
 
         make_sfx(sfx_dir, tmp)
 

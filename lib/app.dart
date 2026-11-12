@@ -21,9 +21,13 @@ class EnglishForIraqApp extends StatelessWidget {
             title: 'English for Iraq',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.build(arabic: arabic),
-            builder: (context, child) => Directionality(
-              textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
-              child: child ?? const SizedBox.shrink(),
+            builder: (context, child) => Listener(
+              // Web (iPad Safari): the first tap unlocks audio playback.
+              onPointerUp: (_) => services.audio.unlock(),
+              child: Directionality(
+                textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
             home: const HomeScreen(),
           );

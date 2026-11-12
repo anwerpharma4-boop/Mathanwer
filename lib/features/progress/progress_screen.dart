@@ -102,9 +102,13 @@ class ProgressScreen extends StatelessWidget {
                             '$today ${context.tr('activitiesToday')} · ${(progress.secondsOn(DateTime.now()) / 60).round()} ${context.tr('minutesToday')}',
                           ),
                           if (progress.dailyGoalMet)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 4),
-                              child: Pill(text: '✓', colour: AppColors.success, icon: Icons.flag_rounded),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Pill(
+                                text: context.tr('completed'),
+                                colour: AppColors.success,
+                                icon: Icons.flag_rounded,
+                              ),
                             ),
                         ],
                       ),

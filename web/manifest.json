@@ -1,0 +1,18 @@
+{
+  "name": "English for Iraq – 1st Primary",
+  "short_name": "English Iraq",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#FFF8EE",
+  "theme_color": "#4F8DF9",
+  "description": "The original English for Iraq 1st Primary Pupil's Book and interactive English lessons. Works offline.",
+  "orientation": "any",
+  "prefer_related_applications": false,
+  "icons": [
+    {"src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/Icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

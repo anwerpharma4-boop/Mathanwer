@@ -86,6 +86,7 @@ class LearningTimer with WidgetsBindingObserver {
       _resume();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _flush();
+      progress.flush();
       _since = null;
       _timer?.cancel();
     }

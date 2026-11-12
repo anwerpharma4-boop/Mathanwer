@@ -262,6 +262,30 @@ void main() {
       await s.close();
     });
 
+    test('web snapshot store saves and restores everything', () async {
+      String? saved;
+      final a = ProgressStore.snapshot(save: (j) => saved = j);
+      await a.completeLesson('u2l1');
+      await a.recordResult(kind: 'quiz', ref: 'unit_2', unitId: 2, score: 7, total: 10);
+      await a.recordWord('goat', false);
+      await a.toggleBookmark(19);
+      await a.setLastReaderPage(23);
+      await a.addLearningTime(90);
+      a.flush();
+      expect(saved, isNotNull);
+      final b = ProgressStore.snapshot(json: saved, save: (_) {});
+      expect(b.lesson('u2l1').status, LessonStatus.completed);
+      expect(b.results.single.score, 7);
+      expect(b.weakWords, ['goat']);
+      expect(b.bookmarks, {19});
+      expect(b.lastReaderPage, 23);
+      expect(b.totalSeconds, 90);
+      expect(b.totalStars, a.totalStars);
+      expect(b.badges.keys, a.badges.keys);
+      // A corrupt snapshot never crashes the app.
+      expect(ProgressStore.snapshot(json: '{oops', save: (_) {}).results, isEmpty);
+    });
+
     test('mastered words', () async {
       final s = await openTestStore();
       for (var i = 0; i < 3; i++) {

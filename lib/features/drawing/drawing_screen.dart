@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app_scope.dart';
 import '../../content/book_data.dart';
@@ -28,10 +32,79 @@ const List<Color> drawingColours = [
   Color(0xFF8E5CC9), // purple
 ];
 
-Future<Directory> drawingsDir() async {
-  final d = Directory(p.join((await getApplicationDocumentsDirectory()).path, 'drawings'));
-  if (!await d.exists()) await d.create(recursive: true);
-  return d;
+class SavedDrawing {
+  const SavedDrawing(this.id, this.bytes);
+  final String id;
+  final Uint8List bytes;
+}
+
+/// Where finished drawings are kept: app files on Android, the browser's
+/// local storage on the web (iPad Safari).
+abstract class DrawingStore {
+  Future<void> save(Uint8List png);
+  Future<List<SavedDrawing>> list();
+  Future<void> delete(String id);
+
+  /// Size of saved images (smaller on the web to fit in local storage).
+  int get pixels;
+
+  static DrawingStore of(BuildContext context) =>
+      kIsWeb ? _PrefsDrawingStore(AppScope.read(context).settings.prefs) : _FileDrawingStore();
+}
+
+class _FileDrawingStore extends DrawingStore {
+  @override
+  int get pixels => 1024;
+
+  Future<Directory> _dir() async {
+    final d = Directory(p.join((await getApplicationDocumentsDirectory()).path, 'drawings'));
+    if (!await d.exists()) await d.create(recursive: true);
+    return d;
+  }
+
+  @override
+  Future<void> save(Uint8List png) async {
+    final d = await _dir();
+    await File(p.join(d.path, 'drawing_${DateTime.now().millisecondsSinceEpoch}.png')).writeAsBytes(png);
+  }
+
+  @override
+  Future<List<SavedDrawing>> list() async {
+    final d = await _dir();
+    final files = d.listSync().whereType<File>().where((f) => f.path.endsWith('.png')).toList()
+      ..sort((a, b) => b.path.compareTo(a.path));
+    return [for (final f in files) SavedDrawing(f.path, f.readAsBytesSync())];
+  }
+
+  @override
+  Future<void> delete(String id) => File(id).delete();
+}
+
+class _PrefsDrawingStore extends DrawingStore {
+  _PrefsDrawingStore(this.prefs);
+  final SharedPreferences prefs;
+  static const _key = 'drawings_v1';
+  static const _max = 12;
+
+  @override
+  int get pixels => 512;
+
+  List<String> get _raw => prefs.getStringList(_key) ?? [];
+
+  @override
+  Future<void> save(Uint8List png) async {
+    final entry = '${DateTime.now().millisecondsSinceEpoch}:${base64Encode(png)}';
+    final all = [entry, ..._raw];
+    await prefs.setStringList(_key, all.take(_max).toList());
+  }
+
+  @override
+  Future<List<SavedDrawing>> list() async => [
+    for (final e in _raw) SavedDrawing(e.substring(0, e.indexOf(':')), base64Decode(e.substring(e.indexOf(':') + 1))),
+  ];
+
+  @override
+  Future<void> delete(String id) async => prefs.setStringList(_key, _raw.where((e) => !e.startsWith('$id:')).toList());
 }
 
 class DrawingHomeScreen extends StatelessWidget {
@@ -140,7 +213,7 @@ class _Gallery extends StatefulWidget {
 }
 
 class _GalleryState extends State<_Gallery> {
-  List<File> _files = [];
+  List<SavedDrawing> _files = [];
 
   @override
   void initState() {
@@ -150,9 +223,7 @@ class _GalleryState extends State<_Gallery> {
 
   Future<void> _load() async {
     try {
-      final d = await drawingsDir();
-      final files = d.listSync().whereType<File>().where((f) => f.path.endsWith('.png')).toList()
-        ..sort((a, b) => b.path.compareTo(a.path));
+      final files = await DrawingStore.of(context).list();
       if (mounted) setState(() => _files = files);
     } catch (_) {}
   }
@@ -169,7 +240,7 @@ class _GalleryState extends State<_Gallery> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.file(f, width: 120, height: 120, fit: BoxFit.cover, cacheWidth: 240),
+                child: Image.memory(f.bytes, width: 120, height: 120, fit: BoxFit.cover, cacheWidth: 240),
               ),
               Positioned(
                 right: 0,
@@ -178,7 +249,7 @@ class _GalleryState extends State<_Gallery> {
                   icon: const Icon(Icons.delete_rounded, color: Colors.white),
                   style: IconButton.styleFrom(backgroundColor: Colors.black38, minimumSize: const Size(36, 36)),
                   onPressed: () async {
-                    await f.delete();
+                    await DrawingStore.of(context).delete(f.id);
                     _load();
                   },
                 ),
@@ -221,29 +292,29 @@ class DrawingCanvasScreenState extends State<DrawingCanvasScreen> {
 
   void clear() => setState(strokes.clear);
 
-  Future<String?> save() async {
-    const px = 1024.0;
+  Future<bool> save() async {
+    final store = DrawingStore.of(context);
+    final px = store.pixels.toDouble();
     final rec = ui.PictureRecorder();
     final canvas = Canvas(rec);
-    _DrawingPainter(strokes, widget.outline).paint(canvas, const Size(px, px));
+    _DrawingPainter(strokes, widget.outline).paint(canvas, Size(px, px));
     final img = await rec.endRecording().toImage(px.toInt(), px.toInt());
     final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
     img.dispose();
-    if (bytes == null) return null;
+    if (bytes == null) return false;
     try {
-      final d = await drawingsDir();
-      final f = File(p.join(d.path, 'drawing_${DateTime.now().millisecondsSinceEpoch}.png'));
-      await f.writeAsBytes(bytes.buffer.asUint8List());
-      if (!mounted) return f.path;
+      await store.save(bytes.buffer.asUint8List());
+      if (!mounted) return true;
       final services = AppScope.read(context);
       services.audio.sfx(Sfx.star);
       await services.progress.recordResult(kind: 'drawing', ref: widget.outline?.id ?? 'free', score: 1, total: 1);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('saved'))));
       }
-      return f.path;
+      return true;
     } catch (e) {
-      return null;
+      debugPrint('Saving drawing failed: $e');
+      return false;
     }
   }
 
